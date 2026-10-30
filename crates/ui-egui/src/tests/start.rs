@@ -175,3 +175,46 @@ fn create_project_s_folder_comes_from_the_system_s_dialog() {
     h.run();
     assert_eq!(h.state().create_project.as_ref().and_then(|f| f.folder.clone()), Some(dir.path().to_path_buf()));
 }
+
+#[test]
+fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
+    let dir = tempfile::tempdir().unwrap();
+    let ifc = dir.path().join("Arquitetura.ifc");
+    let mut arq = Session::new();
+    arq.execute("new", &json!({"language": "pt", "heights": [3060, 2880], "names": ["Térreo", "Superior", "Cobertura"]})).unwrap();
+    arq.execute("wall", &json!({"points": [[0, 0], [5000, 0], [5000, 4000]]})).unwrap();
+    arq.execute("save", &json!({"path": ifc})).unwrap();
+    let mut h = home(dir.path(), &[]);
+    press(&mut h, "Create Project…");
+    press(&mut h, "Choose IFC…");
+    let tx = crate::dialog::BEGUN.with(|b| b.borrow_mut().pop()).expect("a dialog was begun");
+    tx.send(Some(vec![ifc.clone()])).unwrap();
+    h.run();
+    {
+        let f = h.state().create_project.as_ref().unwrap();
+        assert_eq!(f.error, None);
+        assert_eq!(f.name, "Arquitetura", "named after the file while none is typed");
+        let storeys: Vec<(&str, &str)> = f.storeys.iter().map(|s| (s.name.as_str(), s.height.as_str())).collect();
+        assert_eq!(storeys, [("Térreo", "3,06"), ("Superior", "2,88")]);
+        assert_eq!(f.top, "Cobertura");
+    }
+    h.state_mut().create_project.as_mut().unwrap().folder = Some(dir.path().to_path_buf());
+    h.run();
+    press(&mut h, "Create");
+    let m = &h.state().session.model;
+    let links: Vec<&bimcraft_core::model::Link> = m
+        .elements
+        .values()
+        .filter_map(|e| match e {
+            bimcraft_core::model::Element::Link(l) => Some(l),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links.len(), 1, "the architecture is linked");
+    assert_eq!(links[0].path, "Arquitetura.ifc", "beside the project, so the folder can move");
+    assert!(!m.loaded.is_empty(), "and read");
+    assert!(!h.state().dirty(), "saved with its link");
+    // Its levels are the project's: nothing comes in as a level of its own.
+    let names: Vec<String> = bimcraft_core::link::seen(m).levels().into_iter().map(|(_, l)| l.name.clone()).collect();
+    assert!(names.iter().all(|n| !n.contains(':')), "{names:?}");
+}

@@ -102,6 +102,13 @@ pub static ALL: &[Command] = &[
         link_model,
     ),
     other(
+        "levels_in",
+        "Levels in a File",
+        "{path} the levels another project (.bimcraft or .ifc) has, lowest first ({name, elevation} in mm), read without opening or \
+         linking it: to make this project's storeys match an architect's model before linking it. It changes nothing",
+        levels_in,
+    ),
+    other(
         "reload",
         "Reload Links",
         "{id?} read the file of the link `id`, or of every link, again: for a project that changed on disk. Returns `reloaded` \
@@ -10340,4 +10347,15 @@ fn material_list(s: &mut Session, p: &Value) -> R {
         std::fs::write(&path, bytes).map_err(|e| bad(c, format!("{path}: {e}")))?;
     }
     Ok(json!({"pipes": pipe_rows, "components": part_rows, "bar_mm": bar}))
+}
+
+/// The levels of the file at `path`, lowest first: what a project's storeys follow to match a model it links.
+fn levels_in(s: &mut Session, p: &Value) -> R {
+    let c = "levels_in";
+    only(c, p, &["path"])?;
+    let path = string(c, p, "path")?.ok_or_else(|| bad(c, "`path` is required"))?;
+    let other = read_link(s, &path).map_err(|e| bad(c, e))?;
+    let mut levels: Vec<(String, f64)> = other.levels().into_iter().map(|(_, l)| (l.name.clone(), l.elevation)).collect();
+    levels.sort_by(|a, b| a.1.total_cmp(&b.1));
+    Ok(json!({"levels": levels.iter().map(|(name, elevation)| json!({"name": name, "elevation": elevation})).collect::<Vec<_>>()}))
 }

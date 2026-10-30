@@ -58,3 +58,29 @@ fn storeys_that_make_no_sense_are_refused_and_the_project_stays() {
         assert_eq!(*s.model, *before, "{p}");
     }
 }
+
+#[test]
+fn the_levels_of_an_architect_s_ifc_are_read_without_opening_it() {
+    let dir = std::env::temp_dir().join(format!("bimcraft-test-{}-levels-in", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let ifc = dir.join("arq.ifc");
+    let mut arq = Session::new();
+    arq.execute("new", &json!({"language": "pt", "heights": [3060, 2880], "names": ["Térreo", "Superior", "Cobertura"]})).unwrap();
+    arq.execute("wall", &json!({"points": [[0, 0], [5000, 0]]})).unwrap();
+    arq.execute("save", &json!({"path": ifc})).unwrap();
+    let mut s = Session::new();
+    let before = s.model.clone();
+    let r = s.execute("levels_in", &json!({"path": ifc})).unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    assert_eq!(
+        r["levels"],
+        json!([
+            {"name": "Térreo", "elevation": 0.0},
+            {"name": "Superior", "elevation": 3060.0},
+            {"name": "Cobertura", "elevation": 5940.0}
+        ])
+    );
+    assert_eq!(*s.model, *before, "nothing is opened or linked");
+    assert!(s.execute("levels_in", &json!({"path": "/nonexistent/arq.ifc"})).is_err());
+    assert!(s.execute("levels_in", &json!({"path": 5})).is_err());
+}
