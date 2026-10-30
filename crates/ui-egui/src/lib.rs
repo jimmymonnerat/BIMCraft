@@ -35,6 +35,7 @@ mod linestyles;
 mod lineweights;
 mod links;
 mod mep;
+mod newproject;
 mod notes;
 mod objectstyles;
 mod orbit;
@@ -278,6 +279,8 @@ enum Tab {
 enum Pending {
     Recover(bimcraft_core::autosave::Backup),
     New,
+    /// Create Project: a new project with its storeys, saved where the form said.
+    Create(Box<newproject::Creating>),
     Open,
     /// A file the system asked to open ([`OsEvent::Open`]).
     OpenPath(PathBuf),
@@ -655,6 +658,8 @@ pub struct BimApp {
     standards_dialog: Option<standards::StandardsDialog>,
     options_dialog: Option<phasing::OptionsDialog>,
     purge_dialog: Option<purge::PurgeDialog>,
+    /// Create Project, the start page's form, while it is open.
+    create_project: Option<newproject::CreateProject>,
     /// Manage > Select by ID and IDs of Selection, while open.
     select_by_id: Option<inquiry::SelectById>,
     ids_of_selection: Option<inquiry::IdsOfSelection>,
@@ -1085,6 +1090,7 @@ impl BimApp {
             standards_dialog: None,
             options_dialog: None,
             purge_dialog: None,
+            create_project: None,
             select_by_id: None,
             ids_of_selection: None,
             selection_filter: None,
@@ -2610,6 +2616,7 @@ impl BimApp {
                     self.autosave_document();
                 }
             }
+            Pending::Create(c) => self.create(*c),
             Pending::OpenPath(path) => {
                 self.open_path(&path);
             }
@@ -4450,6 +4457,7 @@ impl BimApp {
     }
 
     fn dialogs(&mut self, ctx: &Context) {
+        self.create_project_window(ctx);
         self.type_properties(ctx);
         self.family_type_properties(ctx);
         self.materials_window(ctx);

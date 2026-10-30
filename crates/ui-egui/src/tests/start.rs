@@ -128,3 +128,50 @@ fn the_footer_says_whether_an_update_is_out() {
     h.run();
     h.get_by_label("BIMCraft 0.4.0 is up to date");
 }
+
+#[test]
+fn create_project_makes_the_storeys_asked_for_and_saves_the_project_in_its_folder() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut h = home(dir.path(), &[]);
+    press(&mut h, "Create Project…");
+    assert!(h.state().create_project.is_some(), "the form is open over the start page");
+    assert!(h.state().home.shown);
+    // Create with nothing filled in says what is missing, inside the form, and makes nothing.
+    press(&mut h, "Create");
+    assert!(h.state().create_project.as_ref().is_some_and(|f| f.error.is_some()));
+    assert!(h.state().home.shown);
+    {
+        let f = h.state_mut().create_project.as_mut().unwrap();
+        f.name = "Casa Maciel".into();
+        f.folder = Some(dir.path().to_path_buf());
+        f.resize(2, "Level");
+        f.storeys[0].name = "Térreo".into();
+        f.storeys[0].height = "3,06".into();
+        f.storeys[1].name = "Superior".into();
+        f.storeys[1].height = "2,88".into();
+        f.top = "Cobertura".into();
+    }
+    h.run();
+    press(&mut h, "Create");
+    assert!(h.state().create_project.is_none());
+    assert!(!h.state().home.shown, "the project opens");
+    let m = &h.state().session.model;
+    assert_eq!(m.name, "Casa Maciel");
+    let mut levels: Vec<(String, f64)> = m.levels().into_iter().map(|(_, l)| (l.name.clone(), l.elevation)).collect();
+    levels.sort_by(|a, b| a.1.total_cmp(&b.1));
+    assert_eq!(levels, vec![("Térreo".into(), 0.0), ("Superior".into(), 3060.0), ("Cobertura".into(), 5940.0)]);
+    assert!(dir.path().join("Casa Maciel.bimcraft").exists(), "saved in the folder chosen");
+    assert!(!h.state().dirty());
+}
+
+#[test]
+fn create_project_s_folder_comes_from_the_system_s_dialog() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut h = home(dir.path(), &[]);
+    press(&mut h, "Create Project…");
+    press(&mut h, "Choose Folder…");
+    let tx = crate::dialog::BEGUN.with(|b| b.borrow_mut().pop()).expect("a dialog was begun");
+    tx.send(Some(vec![dir.path().to_path_buf()])).unwrap();
+    h.run();
+    assert_eq!(h.state().create_project.as_ref().and_then(|f| f.folder.clone()), Some(dir.path().to_path_buf()));
+}

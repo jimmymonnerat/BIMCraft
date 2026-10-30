@@ -54,8 +54,11 @@ pub static ALL: &[Command] = &[
     other(
         "new",
         "New",
-        "{name?, language?: en|pt|es|sv} an empty project with Level 1 (0) and Level 2 (3000), named in its language (Nível 1, \
-         Nível 2 in Portuguese; Nivel 1, Nivel 2 in Spanish; Nivå 1, Nivå 2 in Swedish)",
+        "{name?, language?: en|pt|es|sv, heights?: [mm, …], names?: [text, …]} an empty project with Level 1 (0) and Level 2 (3000), \
+         named in its language (Nível 1, Nível 2 in Portuguese; Nivel 1, Nivel 2 in Spanish; Nivå 1, Nivå 2 in Swedish); with \
+         `heights`, each storey's height from the ground up (1 to 200 storeys, 100 to 100000 mm), a level at the foot of each \
+         storey and one more over the last, named Level 1, Level 2… or by `names` (one for each level, none the same). \
+         Returns `levels`, how many it has",
         new,
     ),
     other("open", "Open", "{path} a .bimcraft project", open),
@@ -2233,15 +2236,84 @@ fn ext(p: &Path) -> String {
     p.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase()
 }
 
+/// The most storeys a new project is made with.
+const MAX_STOREYS: usize = 200;
+
 fn new(s: &mut Session, p: &Value) -> R {
     let c = "new";
+    only(c, p, &["name", "language", "heights", "names"])?;
     let language = match string(c, p, "language")? {
         Some(code) => language_param(c, &code)?,
         None => Language::English,
     };
     let name = string(c, p, "name")?.unwrap_or_else(|| language.word("Project").into());
-    s.reset(Model::new_in(&name, language), None);
-    Ok(json!({"name": name, "language": language.code()}))
+    // Each storey's height, from the ground up: a level at the foot of each and one more over the last.
+    let heights: Option<Vec<f64>> = match p.get("heights") {
+        None | Some(Value::Null) => None,
+        Some(Value::Array(a)) if a.is_empty() || a.len() > MAX_STOREYS => {
+            return Err(bad(c, format!("`heights` lists from 1 to {MAX_STOREYS} storeys' heights in mm, not {}", a.len())));
+        }
+        Some(Value::Array(a)) => Some(
+            a.iter()
+                .map(|h| {
+                    h.as_f64()
+                        .filter(|h| h.is_finite() && *h >= 100.0 && *h <= 100_000.0)
+                        .ok_or_else(|| bad(c, format!("`heights`: a storey is 100 to 100000 mm high, not {h}")))
+                })
+                .collect::<Result<_, _>>()?,
+        ),
+        Some(v) => return Err(bad(c, format!("`heights` is a list of storeys' heights in mm, not {v}"))),
+    };
+    let names: Option<Vec<String>> = match p.get("names") {
+        None | Some(Value::Null) => None,
+        Some(Value::Array(a)) => Some(
+            a.iter()
+                .map(|n| {
+                    n.as_str()
+                        .map(str::trim)
+                        .filter(|n| !n.is_empty() && n.chars().count() <= MAX_TEXT)
+                        .map(String::from)
+                        .ok_or_else(|| bad(c, format!("`names`: a level's name is text, not {n}")))
+                })
+                .collect::<Result<_, _>>()?,
+        ),
+        Some(v) => return Err(bad(c, format!("`names` is a list of the levels' names, not {v}"))),
+    };
+    let mut m = Model::new_in(&name, language);
+    if heights.is_none() && names.is_some() {
+        return Err(bad(c, "`names` names the levels `heights` makes: give `heights` too"));
+    }
+    if let Some(heights) = &heights {
+        let count = heights.len() + 1;
+        let word = language.word("Level");
+        let names = names.unwrap_or_else(|| (1..=count).map(|n| format!("{word} {n}")).collect());
+        if names.len() != count {
+            return Err(bad(c, format!("`names` has a name for each of the {count} levels, not {}", names.len())));
+        }
+        if names.iter().collect::<BTreeSet<_>>().len() != names.len() {
+            return Err(bad(c, "`names`: two levels can't share a name"));
+        }
+        // The two levels every project starts with are its first two; the rest are added over them.
+        let mut ids: Vec<(Id, f64)> = m.levels().into_iter().map(|(id, l)| (id, l.elevation)).collect();
+        ids.sort_by(|a, b| a.1.total_cmp(&b.1));
+        let mut elevation = 0.0;
+        for (i, level_name) in names.iter().enumerate() {
+            match ids.get(i).and_then(|(id, _)| m.elements.get_mut(*id)) {
+                Some(Element::Level(l)) => {
+                    l.name = level_name.clone();
+                    l.elevation = elevation;
+                }
+                _ => {
+                    m.insert(Element::Level(Level::new(level_name.clone(), elevation)));
+                }
+            }
+            elevation += heights.get(i).copied().unwrap_or(0.0);
+        }
+        m.check().map_err(|e| bad(c, e))?;
+    }
+    let levels = m.levels().len();
+    s.reset(m, None);
+    Ok(json!({"name": name, "language": language.code(), "levels": levels}))
 }
 
 fn language_param(c: &str, code: &str) -> Result<Language, String> {

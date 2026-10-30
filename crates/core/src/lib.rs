@@ -54,6 +54,8 @@ pub mod link;
 pub mod massing;
 pub mod model;
 pub mod nbr5410;
+#[cfg(test)]
+mod new_project_tests;
 pub mod paint;
 pub mod pat;
 pub mod pdf;

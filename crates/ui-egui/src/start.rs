@@ -128,6 +128,7 @@ fn ago(when: SystemTime) -> String {
 /// What a click on the page asks for, done once it's drawn.
 enum Click {
     New,
+    Create,
     Open,
     Recent(PathBuf),
     Forget(PathBuf),
@@ -257,6 +258,7 @@ impl BimApp {
         let Some(click) = click else { return };
         match click {
             Click::New => self.guard(Pending::New, &ctx),
+            Click::Create => self.open_create_project(),
             Click::Open => self.guard(Pending::Open, &ctx),
             Click::Recent(path) => self.guard(Pending::OpenPath(path), &ctx),
             Click::Forget(path) => {
@@ -298,6 +300,11 @@ impl BimApp {
     fn start_actions(&self, ui: &mut Ui, click: &mut Option<Click>) {
         heading(ui, "Start");
         let cmd = if cfg!(target_os = "macos") { "⌘" } else { "Ctrl+" };
+        let hint = msg!("Its name, folder and storeys: the levels made and the project saved there.");
+        if action(ui, Icon::NewFile, msg!("Create Project…"), hint, "").clicked() {
+            *click = Some(Click::Create);
+        }
+        ui.add_space(10.0);
         if action(ui, Icon::NewFile, msg!("New Project"), msg!("An empty project to model in."), &format!("{cmd}N")).clicked() {
             *click = Some(Click::New);
         }
