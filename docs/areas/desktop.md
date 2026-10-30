@@ -318,3 +318,11 @@ Dimension Type Properties (`dimtypes.rs`), and Properties edits its prefix, suff
 A double click on one of its numbers opens Dimension Text for that segment (`DimensionTextDialog`). Selected, an aligned or linear one shows
 a padlock under each segment and, over a string of two or more, EQ past its end (`dimension_constraints`): a click locks or unlocks, or makes
 it equal or not.
+
+Create Project (`newproject.rs`; tests in `tests/start.rs`). The start page's first action opens a form over it, as a designer starts a
+project: its name, the folder it is saved in (the system's folder dialog, `ask_folder`), and its storeys, each one's level name and height
+in metres (a comma or a point before the decimals), with the level over the last storey named on its own row. The storeys' count grows
+from the last one (its height, the next number) and the top level's name follows the count until it is typed. Create says inside the form
+what is missing (a name, a folder, a height that isn't one, two levels of one name, a file already there, which is never overwritten);
+when all is there it guards the project behind (`Pending::Create`), runs `new` with `heights` (mm) and `names`, and saves the project in
+the folder as `<name>.bimcraft`, so it is in Recent and nothing is unsaved. New Project stays the quick empty project, as Ctrl+N is.
