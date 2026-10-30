@@ -117,9 +117,10 @@ One line per module: what it owns. Read the module's file and, for the areas it 
 - `water.rs`: the `water_size` command, cold water by NBR 5626 (design flow, speed, head loss, pressure).
 - `storm.rs`: the `storm_size` command, storm drains by NBR 10844 (Manning, the downpipe abacuses).
 - `drainage.rs`: the `drain_size` and `vent_size` commands, sanitary drains and vents by NBR 8160's tables.
+- `fittings.rs`: the pipe network read from pipes' ends, the `pipe_fittings` command (elbows and tees where pipes meet) and `material_list`, the plumbing's bill of materials ([structure and MEP](docs/areas/structure-and-mep.md)).
 - `conduit.rs`: the `conduit_fill` command, a conduit's fill by NBR 5410 (makers' catalogues in `conduit/tables.rs`).
 - `nbr5410.rs`: the `circuit` command's sizing of a circuit by NBR 5410 (tables in `nbr5410/tables.rs`; [structure and MEP](docs/areas/structure-and-mep.md)).
-- `tests.rs`, `mep_tests.rs`, `structure_tests.rs`, `eberick_tests.rs`, `reinforce_tests.rs`, `autosave_tests.rs`: the engine driven through commands, as a front end drives it.
+- `tests.rs`, `mep_tests.rs`, `fittings_tests.rs`, `structure_tests.rs`, `eberick_tests.rs`, `reinforce_tests.rs`, `autosave_tests.rs`: the engine driven through commands, as a front end drives it.
 
 `crates/ui-egui` (`bimcraft-ui-egui`, a thin shell over the core; notes: [crates/ui-egui/CLAUDE.md](crates/ui-egui/CLAUDE.md); area: [the desktop](docs/areas/desktop.md)):
 

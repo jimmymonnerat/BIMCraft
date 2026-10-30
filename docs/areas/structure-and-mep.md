@@ -129,3 +129,18 @@ named before the command is asked. It takes any number of elements selected, of 
 when the element has bars the command made (those with a layer), deletes them and leaves the ones drawn by hand. The fields' accessible names are
 "Group: Field" (`Bottom bars: Count`), and the cover's is `Cover`, its label having a colon so that no two nodes carry the name.
 
+
+The pipe network (`fittings.rs`; tests in `fittings_tests.rs`). A pipe's end is a connector found by its place, not stored: `network` reads
+every pipe's two ends (of one `system` when asked) and gathers into one node the ends within the larger pipe's radius of it (at most
+100 mm), and an end that lands alone on another pipe between its ends (more than a radius from them) is a node of three, that pipe
+running both ways from it. A node of one end is open (where the network stops, listed for checking continuity); two in line of one
+diameter need nothing; two level ones turning 90° in plan (within 3°) take an elbow, three level ones with two in line and the third
+square to them a tee. Anything else is listed with why (a reduction, a turn not of 90°, a turn up or down, a tee of two diameters, a
+cross), never guessed. `pipe_fittings` places the starter `Elbow 90` and `Tee` (in the project's language) at a node, centred at its
+height, turned so the elbow's legs (-x and +y) or the tee's run (x) and branch (+y) lie along the pipes, of the type named for the
+pipe's diameter (`type_name`: 50, 32.5), which it adds to the family when it has none; a node with a pipe fitting within a radius of
+it already is left alone, so it runs again safely, and `dry_run` reports without changing anything. The pipes are not cut back at a
+fitting. `material_list` reads the model only: each pipe system and type's true length in metres and the whole bars of `bar` mm (6 m
+unless told) it takes, and the sanitary fixtures, floor drains, pipe fittings and pipe accessories counted by family and type; with a
+`path` it writes the same list as a workbook (.xlsx) or as CSV with semicolons, decimal commas and a byte-order mark, as a Brazilian
+spreadsheet opens it.

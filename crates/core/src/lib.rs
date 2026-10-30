@@ -32,6 +32,9 @@ pub mod engine;
 pub mod family;
 pub mod favorites;
 pub mod fills;
+pub mod fittings;
+#[cfg(test)]
+mod fittings_tests;
 mod fixtures;
 mod font;
 pub mod geom;

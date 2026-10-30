@@ -869,6 +869,28 @@ pub static ALL: &[Command] = &[
         component,
     ),
     edit(
+        "pipe_fittings",
+        "Generate Fittings",
+        &[],
+        "{system?, dry_run?} the fittings where pipes meet, read from their ends (a pipe network): ends that meet within the larger \
+         pipe's radius are one node, and an end on another pipe between its ends is a tee. Two pipes turning 90° in plan get the \
+         starter Elbow 90, two in line and one square to them in plan the Tee, of a type named for the pipe's diameter (made in the \
+         family when it has none), centred on the node at its height and turned to the pipes; a node that has a pipe fitting already \
+         is left alone, so it can run again. `system` only that system's pipes; `dry_run` changes nothing. Returns `placed` \
+         ({id, family, type, at, angle, pipes}), `open_ends` ({at, pipe}: where the network stops, to check it for continuity), \
+         `unfitted` ({at, pipes, why}: a reduction, a turn not of 90°, a riser's turn, a cross; never guessed) and `already_fitted`",
+        pipe_fittings,
+    ),
+    other(
+        "material_list",
+        "Material List",
+        "{path?, bar?: 6000} the plumbing's material list: `pipes` by system and type ({system, type, diameter, length_m, bars}: the \
+         true length of every pipe, and the whole bars of `bar` mm it takes) and `components`, the sanitary fixtures, floor drains, \
+         pipe fittings and pipe accessories counted by family and type ({category, family, type, count}). `path` writes it too: a \
+         workbook for .xlsx, else CSV with semicolons and decimal commas, as a Brazilian spreadsheet reads it. It changes nothing",
+        material_list,
+    ),
+    edit(
         "flip",
         "Flip",
         &[],
@@ -10100,4 +10122,150 @@ fn elements(s: &mut Session, p: &Value) -> R {
         .collect();
     let page: Vec<Value> = hits.iter().skip(offset).take(limit).map(|id| element_json(m, *id)).collect();
     Ok(json!({"count": hits.len(), "returned": page.len(), "elements": page}))
+}
+
+// ---------- pipe network: fittings and the material list ----------
+
+/// The fittings where pipes meet (`fittings.rs`): an elbow or a tee of the pipe's diameter at each node that takes one and has none.
+fn pipe_fittings(s: &mut Session, p: &Value) -> R {
+    use crate::fittings::{self, Kind};
+    let c = "pipe_fittings";
+    only(c, p, &["system", "dry_run"])?;
+    let system = name_param(c, p, "system")?;
+    let dry = flag(c, p, "dry_run")?;
+    let nodes = fittings::network(&s.model, system.as_deref());
+    let language = s.model.language;
+    let diameter_word = language.word(msg!("Diameter")).to_string();
+    let at = |n: &fittings::Node| json!([n.at[0], n.at[1], n.at[2]]);
+    let pipes = |n: &fittings::Node| {
+        let mut ids: Vec<Id> = n.ends.iter().map(|e| e.pipe).collect();
+        ids.dedup();
+        json!(ids)
+    };
+    let (mut placed, mut open, mut unfitted, mut existing) = (Vec::new(), Vec::new(), Vec::new(), 0usize);
+    for n in &nodes {
+        let (family, angle) = match &n.kind {
+            Kind::Straight => continue,
+            Kind::Open => {
+                open.push(json!({"at": at(n), "pipe": n.ends[0].pipe}));
+                continue;
+            }
+            Kind::Unfitted(why) => {
+                unfitted.push(json!({"at": at(n), "pipes": pipes(n), "why": why}));
+                continue;
+            }
+            Kind::Elbow { angle } => (language.word(msg!("Elbow 90")).to_string(), *angle),
+            Kind::Tee { angle } => (language.word(msg!("Tee")).to_string(), *angle),
+        };
+        let d = n.diameter();
+        if fittings::fitted(&s.model, n.at, (d / 2.0).max(TOL)) {
+            existing += 1;
+            continue;
+        }
+        let Some(f) = s.model.families.get(&family) else {
+            unfitted.push(json!({"at": at(n), "pipes": pipes(n), "why": format!("the project has no family `{family}`")}));
+            continue;
+        };
+        if !f.parameters.iter().any(|q| q.name == diameter_word) {
+            unfitted.push(json!({"at": at(n), "pipes": pipes(n), "why": format!("family `{family}` has no `{diameter_word}` parameter")}));
+            continue;
+        }
+        let type_name = fittings::type_name(d);
+        let offset = n.at[2] - s.model.elevation(n.level);
+        let mut made = json!({"family": family, "type": type_name, "at": at(n), "angle": angle, "pipes": pipes(n)});
+        if !dry {
+            let m = s.model_mut();
+            if let Some(f) = m.families.get_mut(&family) {
+                f.types.entry(type_name.clone()).or_insert_with(|| BTreeMap::from([(diameter_word.clone(), json!(d))]));
+            }
+            let comp = Component {
+                family: family.clone(),
+                type_name,
+                level: n.level,
+                at: P2(n.at[0], n.at[1]),
+                angle,
+                offset,
+                mirrored: false,
+                params: BTreeMap::new(),
+            };
+            made["id"] = json!(m.insert(Element::Component(comp)));
+        }
+        placed.push(made);
+    }
+    Ok(json!({"placed": placed, "open_ends": open, "unfitted": unfitted, "already_fitted": existing, "dry_run": dry}))
+}
+
+/// The plumbing's material list: pipes by system and type (metres and whole bars) and the fixtures, fittings and accessories counted.
+fn material_list(s: &mut Session, p: &Value) -> R {
+    use crate::family::Category;
+    let c = "material_list";
+    only(c, p, &["path", "bar"])?;
+    let bar = within(c, p, "bar", 6000.0, 100.0, 100_000.0)?;
+    let m = &s.model;
+    let mut pipes: BTreeMap<(String, String), (f64, f64)> = BTreeMap::new();
+    for e in m.elements.values().filter(|e| e.category() == "pipe") {
+        let (Some(r), Some(g)) = (e.run(), m.run_geom(e)) else { continue };
+        let row = pipes.entry((r.system.clone(), r.type_name.clone())).or_insert((0.0, g.width));
+        row.0 += g.length();
+    }
+    let kinds = [Category::Plumbing, Category::Drain, Category::PipeFitting, Category::PipeAccessory];
+    let mut parts: BTreeMap<(String, String, String), u64> = BTreeMap::new();
+    for e in m.elements.values() {
+        let Element::Component(comp) = e else { continue };
+        let Some(f) = m.families.get(&comp.family).filter(|f| kinds.contains(&f.category)) else { continue };
+        let category = serde_json::to_value(f.category).ok().and_then(|v| v.as_str().map(String::from)).unwrap_or_default();
+        *parts.entry((category, comp.family.clone(), comp.type_name.clone())).or_insert(0) += 1;
+    }
+    let pipe_rows: Vec<Value> = pipes
+        .iter()
+        .map(|((system, ty), (mm, d))| {
+            let metres = (mm / 10.0).round() / 100.0;
+            let bars = (mm / bar - 1e-9).ceil().max(0.0) as u64;
+            json!({"system": system, "type": ty, "diameter": d, "length_m": metres, "bars": bars})
+        })
+        .collect();
+    let part_rows: Vec<Value> =
+        parts.iter().map(|((cat, fam, ty), n)| json!({"category": cat, "family": fam, "type": ty, "count": n})).collect();
+    if let Some(path) = string(c, p, "path")? {
+        let w = |s: &str| m.language.word(s).to_string();
+        let headings = vec![w(msg!("System")), w(msg!("Item")), w(msg!("Unit")), w(msg!("Quantity")), w(msg!("Bars"))];
+        let bar_m = bar / 1000.0;
+        let mut rows: Vec<Vec<crate::xlsx::Cell>> = Vec::new();
+        use crate::xlsx::Cell;
+        for ((system, ty), (mm, _)) in &pipes {
+            let bars = (mm / bar - 1e-9).ceil().max(0.0);
+            rows.push(vec![
+                Cell::Text(system.clone()),
+                Cell::Text(ty.clone()),
+                Cell::Text("m".into()),
+                Cell::Number((mm / 10.0).round() / 100.0),
+                Cell::Text(format!("{bars} x {bar_m} m")),
+            ]);
+        }
+        for ((_, fam, ty), n) in &parts {
+            rows.push(vec![Cell::Empty, Cell::Text(format!("{fam} {ty}")), Cell::Text("un".into()), Cell::Number(*n as f64), Cell::Empty]);
+        }
+        let bytes = if path.to_lowercase().ends_with(".xlsx") {
+            crate::xlsx::workbook(&w(msg!("Material List")), &headings, &rows)
+        } else {
+            let quote = |s: String| if s.contains([';', '"', '\n', '\r']) { format!("\"{}\"", s.replace('"', "\"\"")) } else { s };
+            let cell = |v: &Cell| match v {
+                Cell::Text(t) => quote(if t.starts_with(['=', '+', '-', '@']) { format!("'{t}") } else { t.clone() }),
+                Cell::Number(x) => format!("{x}").replace('.', ","),
+                Cell::Empty => String::new(),
+            };
+            let mut out = headings.iter().map(|h| quote(h.clone())).collect::<Vec<_>>().join(";");
+            out.push('\n');
+            for r in &rows {
+                out.push_str(&r.iter().map(cell).collect::<Vec<_>>().join(";"));
+                out.push('\n');
+            }
+            // A BOM so a spreadsheet reads the accents as UTF-8.
+            let mut bytes = "\u{feff}".as_bytes().to_vec();
+            bytes.extend(out.into_bytes());
+            bytes
+        };
+        std::fs::write(&path, bytes).map_err(|e| bad(c, format!("{path}: {e}")))?;
+    }
+    Ok(json!({"pipes": pipe_rows, "components": part_rows, "bar_mm": bar}))
 }
