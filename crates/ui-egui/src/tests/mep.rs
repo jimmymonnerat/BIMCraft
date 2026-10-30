@@ -669,3 +669,31 @@ fn the_discipline_tabs_speak_portuguese_and_spanish_and_leave_no_english() {
         ["Tubulações", "Eletroduto", "Eletrocalha"]
     );
 }
+
+#[test]
+fn generate_fittings_places_an_elbow_where_two_pipes_turn_and_says_what_it_found() {
+    let mut h = app(r#"pipe {"points": [[0,0],[2000,0],[2000,1500]], "type": "PVC 50", "system": "Água fria"}"#);
+    press(&mut h, "Plumbing");
+    press(&mut h, "Generate Fittings");
+    let elbows = h.state().session.model.elements.values().filter(|e| e.category() == "component").count();
+    assert_eq!(elbows, 1);
+    assert_eq!(h.state().status.text, "1 fittings placed, 2 open ends, 0 nodes not fitted");
+    // One undo step takes it back.
+    h.state_mut().run("undo", serde_json::json!({}));
+    assert_eq!(h.state().session.model.elements.values().filter(|e| e.category() == "component").count(), 0);
+}
+
+#[test]
+fn material_list_asks_where_and_writes_the_workbook_there() {
+    let mut h = app(r#"pipe {"points": [[0,0],[4000,0],[4000,3500]], "type": "PVC 50", "system": "Água fria"}"#);
+    press(&mut h, "Plumbing");
+    press(&mut h, "Material List");
+    let tx = crate::dialog::BEGUN.with(|b| b.borrow_mut().pop()).expect("a dialog was begun");
+    let path = std::env::temp_dir().join(format!("bimcraft-ui-{}-materials.xlsx", std::process::id()));
+    tx.send(Some(vec![path.clone()])).unwrap();
+    h.run();
+    let bytes = std::fs::read(&path).unwrap_or_default();
+    let _ = std::fs::remove_file(&path);
+    assert!(bytes.starts_with(b"PK"), "a workbook (a zip) was written");
+    assert!(h.state().status.text.starts_with("Material list saved to"), "{}", h.state().status.text);
+}

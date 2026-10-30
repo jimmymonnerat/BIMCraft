@@ -276,5 +276,40 @@ impl BimApp {
             );
             self.buttons(ui, &[pipe, Self::fixture_button("plumbing"), Self::fixture_button("fitting"), Self::fixture_button("accessory")]);
         });
+        panel(ui, msg!("Pipe Network"), |ui| {
+            let tip = msg!(
+                "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already \
+                 fitted are left alone, and the open ends and what it can't fit yet are counted"
+            );
+            if big_button(ui, Icon::Fitting, msg!("Generate Fittings"), false, tip).clicked() {
+                self.generate_fittings();
+            }
+            let tip = msg!("Material List: the pipes in metres and 6 m bars, and the fixtures and fittings counted, saved as a workbook");
+            if big_button(ui, Icon::Schedule, msg!("Material List"), false, tip).clicked() {
+                let ctx = ui.ctx().clone();
+                self.export_material_list(&ctx);
+            }
+        });
+    }
+
+    /// Generate Fittings: `pipe_fittings`, one undo step, its result said in the status box.
+    pub(crate) fn generate_fittings(&mut self) {
+        let Some(r) = self.run("pipe_fittings", serde_json::json!({})) else { return };
+        let count = |k: &str| r[k].as_array().map_or(0, Vec::len).to_string();
+        let text = crate::lang::tf(
+            "{} fittings placed, {} open ends, {} nodes not fitted",
+            &[&count("placed"), &count("open_ends"), &count("unfitted")],
+        );
+        self.status = crate::Status { text, error: false };
+    }
+
+    /// Material List: asks where to save the workbook, then `material_list` writes it.
+    pub(crate) fn export_material_list(&mut self, ctx: &egui::Context) {
+        self.ask_path(ctx, msg!("Spreadsheet"), "xlsx", |app, p| {
+            let path = p.display().to_string();
+            if app.run("material_list", serde_json::json!({"path": path})).is_some() {
+                app.status = crate::Status { text: crate::lang::tf("Material list saved to {}", &[&path]), error: false };
+            }
+        });
     }
 }
