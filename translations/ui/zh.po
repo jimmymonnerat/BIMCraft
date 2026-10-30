@@ -329,7 +329,7 @@ msgstr "接闪器 (AT)：在屋顶上单击处放置接闪器；按空格键旋�
 msgid "Air Terminals"
 msgstr "接闪器"
 
-#: crates/core/src/commands.rs:900
+#: crates/core/src/commands.rs:922
 #: crates/ui-egui/src/lib.rs:316
 #: crates/ui-egui/src/sketch.rs:664
 msgid "Align"
@@ -669,6 +669,7 @@ msgstr "保留的备份数"
 msgid "Baluster Spacing"
 msgstr "栏杆间距"
 
+#: crates/core/src/commands.rs:10231
 #: crates/ui-egui/src/reinforce.rs:88
 #: crates/ui-egui/src/reinforce.rs:109
 msgid "Bars"
@@ -1675,7 +1676,7 @@ msgstr "已复制 {} 行，以制表符分隔。"
 msgid "Copper"
 msgstr "铜"
 
-#: crates/core/src/commands.rs:917
+#: crates/core/src/commands.rs:939
 #: crates/ui-egui/src/inquiry.rs:176
 #: crates/ui-egui/src/lib.rs:3979
 #: crates/ui-egui/src/lib.rs:4029
@@ -2040,7 +2041,7 @@ msgstr "拆除 (DW)：单击图元，在视图阶段中将其拆除；再次单�
 msgid "Demolished"
 msgstr "已拆除"
 
-#: crates/core/src/commands.rs:7049
+#: crates/core/src/commands.rs:7071
 msgid "Dependent"
 msgstr "相关"
 
@@ -2135,6 +2136,7 @@ msgstr ""
 msgid "Diagonal Up"
 msgstr ""
 
+#: crates/core/src/commands.rs:10138
 #: crates/core/src/fixtures.rs:173
 #: crates/ui-egui/src/lib.rs:3152
 #: crates/ui-egui/src/reinforce.rs:49
@@ -2453,6 +2455,7 @@ msgstr "编辑 {}"
 msgid "Edit…"
 msgstr "编辑…"
 
+#: crates/core/src/commands.rs:10157
 #: crates/core/src/fixtures.rs:193
 msgid "Elbow 90"
 msgstr "90° 弯头"
@@ -2469,7 +2472,7 @@ msgstr "电气设备"
 msgid "Electrical Equipment (EE): a distribution board, where you click on the wall; Space turns it"
 msgstr "电气设备 (EE)：在墙上单击处放置配电箱；按空格键旋转"
 
-#: crates/core/src/commands.rs:1590
+#: crates/core/src/commands.rs:1612
 msgid "Elements"
 msgstr "图元"
 
@@ -2719,7 +2722,7 @@ msgstr "填充区域 (FR)：在此视图中绘制以图案填充的区域"
 msgid "Filled region"
 msgstr "填充区域"
 
-#: crates/core/src/commands.rs:986
+#: crates/core/src/commands.rs:1008
 msgid "Fillet Arc"
 msgstr "圆角弧"
 
@@ -3455,6 +3458,10 @@ msgstr "斜体"
 msgid "Italic (Ctrl+I)"
 msgstr "斜体 (Ctrl+I)"
 
+#: crates/core/src/commands.rs:10231
+msgid "Item"
+msgstr ""
+
 #: crates/ui-egui/src/properties.rs:2793
 msgid "Itemize every instance"
 msgstr "逐项列举每个实例"
@@ -3867,7 +3874,7 @@ msgstr "体量楼层 (MF)：在所选体量穿过的每个标高处创建一个�
 msgid "Massing"
 msgstr "体量建模"
 
-#: crates/core/src/commands.rs:892
+#: crates/core/src/commands.rs:914
 msgid "Match Properties"
 msgstr "匹配属性"
 
@@ -3885,6 +3892,10 @@ msgstr "已匹配属性：将类型“{}”应用于 {} 个元素"
 #: crates/ui-egui/src/properties.rs:1906
 msgid "Material"
 msgstr "材质"
+
+#: crates/core/src/commands.rs:10249
+msgid "Material List"
+msgstr ""
 
 #: crates/ui-egui/src/lib.rs:3896
 #: crates/ui-egui/src/properties.rs:1704
@@ -3922,7 +3933,7 @@ msgstr "最大化"
 msgid "Maximum Riser Height"
 msgstr "最大踢面高度"
 
-#: crates/core/src/commands.rs:1442
+#: crates/core/src/commands.rs:1464
 msgid "Measure"
 msgstr "测量"
 
@@ -4047,7 +4058,7 @@ msgstr "修改墙"
 msgid "Mounting Height"
 msgstr "安装高度"
 
-#: crates/core/src/commands.rs:909
+#: crates/core/src/commands.rs:931
 msgid "Move"
 msgstr "移动"
 
@@ -5312,6 +5323,10 @@ msgstr "将一个视图放到此图纸上：尚未上图纸的视图"
 msgid "Quadrant"
 msgstr "象限点"
 
+#: crates/core/src/commands.rs:10231
+msgid "Quantity"
+msgstr ""
+
 #: crates/core/src/family.rs:101
 msgid "Rack"
 msgstr "机架"
@@ -5699,7 +5714,7 @@ msgstr "房间面积计算：测量房间面积的位置；当前为{}"
 msgid "Room Schedule"
 msgstr "房间明细表"
 
-#: crates/core/src/commands.rs:924
+#: crates/core/src/commands.rs:946
 msgid "Rotate"
 msgstr "旋转"
 
@@ -5797,7 +5812,7 @@ msgstr "比例：此视图所代表的图纸，为模型的 1 : n；其注释和
 msgid "Scan"
 msgstr "扫描"
 
-#: crates/core/src/commands.rs:1294
+#: crates/core/src/commands.rs:1316
 msgid "Schedule"
 msgstr "明细表"
 
@@ -6332,7 +6347,7 @@ msgstr "通过点的样条曲线：单击它经过的点；按 Enter 完成"
 msgid "Spline: click its control points; Enter finishes it"
 msgstr "样条曲线：单击其控制点；按 Enter 完成"
 
-#: crates/core/src/commands.rs:966
+#: crates/core/src/commands.rs:988
 msgid "Split"
 msgstr "拆分"
 
@@ -6536,6 +6551,7 @@ msgstr "符号"
 msgid "Symbols are the lines a door's or a window's plan draws; this family isn't one."
 msgstr "符号是门或窗在平面中绘制的线；此族不是门或窗。"
 
+#: crates/core/src/commands.rs:10231
 #: crates/core/src/schedule.rs:190
 msgid "System"
 msgstr "系统"
@@ -6612,6 +6628,7 @@ msgstr "技术制图标准"
 msgid "Technical Standards: configure drawing standards (NBR, ISO, ANSI, EU); now {}"
 msgstr "技术制图标准：配置制图标准 (NBR、ISO、ANSI、EU)；当前为 {}"
 
+#: crates/core/src/commands.rs:10158
 #: crates/core/src/fixtures.rs:202
 msgid "Tee"
 msgstr "三通"
@@ -7027,7 +7044,7 @@ msgstr "修剪/延伸单个图元"
 msgid "Trim/Extend Single Element: pick the line to trim or extend to, then the line to change, on the part to keep"
 msgstr "修剪/延伸单个图元：拾取边界线，然后在要保留的部分上拾取要更改的线"
 
-#: crates/core/src/commands.rs:940
+#: crates/core/src/commands.rs:962
 #: crates/ui-egui/src/sketch.rs:667
 msgid "Trim/Extend to Corner"
 msgstr "修剪/延伸为角"
@@ -7185,6 +7202,10 @@ msgstr "取消隐藏图元 (EU)：恢复此视图中隐藏的所选图元"
 msgid "Unhide Elements"
 msgstr "取消隐藏图元"
 
+#: crates/core/src/commands.rs:10231
+msgid "Unit"
+msgstr ""
+
 #: crates/ui-egui/src/clouds.rs:62
 msgid "Units"
 msgstr "单位"
@@ -7193,7 +7214,7 @@ msgstr "单位"
 msgid "Units Format"
 msgstr "单位格式"
 
-#: crates/core/src/commands.rs:7190
+#: crates/core/src/commands.rs:7212
 msgid "Unnamed"
 msgstr "未命名"
 
