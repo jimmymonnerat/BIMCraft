@@ -1796,6 +1796,10 @@ fn hostile_params_never_panic_or_break_the_model() {
         json!({"id": 100006, "boundary": [[0, 0], [1e300, 1e300], [0, 1]]}),
         json!({"id": 100006, "level": 1e300, "base_offset": f64::MAX}),
         json!({"id": 100006, "params": {"Phase Created": "Existing"}}),
+        // The pipe network's: `pipe_fittings` and `material_list`.
+        json!({"system": "", "dry_run": true}),
+        json!({"system": 5, "dry_run": 1}),
+        json!({"bar": 1e-300}),
     ];
     let mut base = Session::new();
     house(&mut base);
