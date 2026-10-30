@@ -3061,6 +3061,14 @@ msgstr "Afastamento do elemento"
 msgid "Gate Valve"
 msgstr "Registro de gaveta"
 
+#: crates/ui-egui/src/mep.rs:284
+msgid "Generate Fittings"
+msgstr "Gerar conexões"
+
+#: crates/ui-egui/src/mep.rs:281
+msgid "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already fitted are left alone, and the open ends and what it can't fit yet are counted"
+msgstr "Gerar conexões: um joelho ou um tê onde os tubos se encontram a 90° em planta, do diâmetro dos tubos; nós que já têm conexão ficam como estão, e as pontas abertas e o que ainda não dá para conectar são contados"
+
 #: crates/ui-egui/src/editor.rs:536
 msgid "Generic"
 msgstr "Genérico"
@@ -3894,8 +3902,17 @@ msgid "Material"
 msgstr "Material"
 
 #: crates/core/src/commands.rs:10249
+#: crates/ui-egui/src/mep.rs:288
 msgid "Material List"
 msgstr "Lista de materiais"
+
+#: crates/ui-egui/src/mep.rs:287
+msgid "Material List: the pipes in metres and 6 m bars, and the fixtures and fittings counted, saved as a workbook"
+msgstr "Lista de materiais: os tubos em metros e em barras de 6 m, e as peças e conexões contadas, salva em planilha"
+
+#: crates/ui-egui/src/mep.rs:311
+msgid "Material list saved to {}"
+msgstr "Lista de materiais salva em {}"
 
 #: crates/ui-egui/src/lib.rs:3896
 #: crates/ui-egui/src/properties.rs:1704
@@ -4903,6 +4920,10 @@ msgstr "Conexão de tubulação"
 #: crates/ui-egui/src/mep.rs:49
 msgid "Pipe Fitting (PF): an elbow or a tee, where you click on a pipe's height; Space turns it"
 msgstr "Conexão de tubulação (PF): joelho ou tê, onde você clicar, na altura da tubulação; Espaço gira"
+
+#: crates/ui-egui/src/mep.rs:279
+msgid "Pipe Network"
+msgstr "Rede de tubulação"
 
 #: crates/ui-egui/src/mep.rs:93
 msgid "Place Air Terminal"
@@ -6372,6 +6393,10 @@ msgstr "Elevação de ponto"
 #: crates/ui-egui/src/lib.rs:3165
 msgid "Spot Elevation (EL): click a floor, a roof or a stair; in a section, a point"
 msgstr "Elevação de ponto (EL): clique num piso, num telhado ou numa escada; num corte, num ponto"
+
+#: crates/ui-egui/src/mep.rs:308
+msgid "Spreadsheet"
+msgstr "Planilha"
 
 #: crates/ui-egui/src/properties.rs:608
 msgid "Square Grid"
@@ -8068,6 +8093,10 @@ msgstr "{} família {}: {}"
 #: crates/ui-egui/src/clouds.rs:54
 msgid "{} files, brought in as one scan's stations"
 msgstr "{} arquivos, trazidos como as estações de um só escaneamento"
+
+#: crates/ui-egui/src/mep.rs:300
+msgid "{} fittings placed, {} open ends, {} nodes not fitted"
+msgstr "{} conexões colocadas, {} pontas abertas, {} nós sem conexão"
 
 #: crates/ui-egui/src/graphics.rs:312
 msgid "{} follow view template {}: change them there."

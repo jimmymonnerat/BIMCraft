@@ -3061,6 +3061,14 @@ msgstr "Écart par rapport à l'élément"
 msgid "Gate Valve"
 msgstr "Vanne à opercule"
 
+#: crates/ui-egui/src/mep.rs:284
+msgid "Generate Fittings"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:281
+msgid "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already fitted are left alone, and the open ends and what it can't fit yet are counted"
+msgstr ""
+
 #: crates/ui-egui/src/editor.rs:536
 msgid "Generic"
 msgstr "Générique"
@@ -3894,7 +3902,16 @@ msgid "Material"
 msgstr "Matériau"
 
 #: crates/core/src/commands.rs:10249
+#: crates/ui-egui/src/mep.rs:288
 msgid "Material List"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:287
+msgid "Material List: the pipes in metres and 6 m bars, and the fixtures and fittings counted, saved as a workbook"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:311
+msgid "Material list saved to {}"
 msgstr ""
 
 #: crates/ui-egui/src/lib.rs:3896
@@ -4903,6 +4920,10 @@ msgstr "Raccord de tuyauterie"
 #: crates/ui-egui/src/mep.rs:49
 msgid "Pipe Fitting (PF): an elbow or a tee, where you click on a pipe's height; Space turns it"
 msgstr "Raccord de tuyauterie (PF): un coude ou un té, à l'endroit du clic, à la hauteur d'un tuyau; Espace le fait pivoter"
+
+#: crates/ui-egui/src/mep.rs:279
+msgid "Pipe Network"
+msgstr ""
 
 #: crates/ui-egui/src/mep.rs:93
 msgid "Place Air Terminal"
@@ -6372,6 +6393,10 @@ msgstr "Cote altimétrique ponctuelle"
 #: crates/ui-egui/src/lib.rs:3165
 msgid "Spot Elevation (EL): click a floor, a roof or a stair; in a section, a point"
 msgstr "Cote altimétrique ponctuelle (EL): cliquer sur un sol, un toit ou un escalier; dans une coupe, un point"
+
+#: crates/ui-egui/src/mep.rs:308
+msgid "Spreadsheet"
+msgstr ""
 
 #: crates/ui-egui/src/properties.rs:608
 msgid "Square Grid"
@@ -8068,6 +8093,10 @@ msgstr "{} famille {}: {}"
 #: crates/ui-egui/src/clouds.rs:54
 msgid "{} files, brought in as one scan's stations"
 msgstr "{} fichiers, importés comme les stations d'un même scan"
+
+#: crates/ui-egui/src/mep.rs:300
+msgid "{} fittings placed, {} open ends, {} nodes not fitted"
+msgstr ""
 
 #: crates/ui-egui/src/graphics.rs:312
 msgid "{} follow view template {}: change them there."

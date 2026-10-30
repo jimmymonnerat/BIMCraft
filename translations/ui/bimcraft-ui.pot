@@ -3061,6 +3061,14 @@ msgstr ""
 msgid "Gate Valve"
 msgstr ""
 
+#: crates/ui-egui/src/mep.rs:284
+msgid "Generate Fittings"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:281
+msgid "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already fitted are left alone, and the open ends and what it can't fit yet are counted"
+msgstr ""
+
 #: crates/ui-egui/src/editor.rs:536
 msgid "Generic"
 msgstr ""
@@ -3894,7 +3902,16 @@ msgid "Material"
 msgstr ""
 
 #: crates/core/src/commands.rs:10249
+#: crates/ui-egui/src/mep.rs:288
 msgid "Material List"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:287
+msgid "Material List: the pipes in metres and 6 m bars, and the fixtures and fittings counted, saved as a workbook"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:311
+msgid "Material list saved to {}"
 msgstr ""
 
 #: crates/ui-egui/src/lib.rs:3896
@@ -4902,6 +4919,10 @@ msgstr ""
 
 #: crates/ui-egui/src/mep.rs:49
 msgid "Pipe Fitting (PF): an elbow or a tee, where you click on a pipe's height; Space turns it"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:279
+msgid "Pipe Network"
 msgstr ""
 
 #: crates/ui-egui/src/mep.rs:93
@@ -6371,6 +6392,10 @@ msgstr ""
 
 #: crates/ui-egui/src/lib.rs:3165
 msgid "Spot Elevation (EL): click a floor, a roof or a stair; in a section, a point"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:308
+msgid "Spreadsheet"
 msgstr ""
 
 #: crates/ui-egui/src/properties.rs:608
@@ -8067,6 +8092,10 @@ msgstr ""
 
 #: crates/ui-egui/src/clouds.rs:54
 msgid "{} files, brought in as one scan's stations"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:300
+msgid "{} fittings placed, {} open ends, {} nodes not fitted"
 msgstr ""
 
 #: crates/ui-egui/src/graphics.rs:312
