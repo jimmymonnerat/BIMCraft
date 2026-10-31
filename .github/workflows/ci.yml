@@ -8,7 +8,7 @@ on:
   pull_request:
   # Pushes to main as well: they go in without a pull request, and a Windows or macOS break shouldn't wait for a tag.
   push:
-    branches: [main]
+    branches: [main, hidrossanitario]
   workflow_dispatch:
 
 permissions:
