@@ -5,7 +5,7 @@
 
 use crate::geom::P2;
 use crate::model::{Id, Model};
-use crate::render::{self, Prim, View};
+use crate::render::{self, Part, Prim, View};
 
 /// Pixels per millimetre the cut is drawn at: one, so a line's ends are as exact as `f32` keeps millimetres.
 const PX_PER_MM: f64 = 1.0;
@@ -15,7 +15,8 @@ const MARGIN: f64 = 2000.0;
 const MAX_PX: f64 = 50_000_000.0;
 
 /// The lines `m`'s plan of `level` draws of what `keep` takes (a linked element), each with the category of its element:
-/// strokes only, in millimetres, a closed line's last edge too. Fills, pictures and what nothing owns (annotation) stay out.
+/// strokes only, in millimetres, a closed line's last edge too. What is cut and what is seen go; fills, the hatching of a cut
+/// (thousands of strokes a base needs none of), lettering, pictures and what nothing owns (annotation) stay out.
 pub fn plan_lines(m: &Model, level: Id, keep: impl Fn(Id) -> bool) -> Vec<(String, P2, P2)> {
     let Some((lo, hi)) = m.model_box() else { return Vec::new() };
     let (w, h) = ((hi[0] - lo[0] + 2.0 * MARGIN) * PX_PER_MM, (hi[1] - lo[1] + 2.0 * MARGIN) * PX_PER_MM);
@@ -26,9 +27,9 @@ pub fn plan_lines(m: &Model, level: Id, keep: impl Fn(Id) -> bool) -> Vec<(Strin
         View { scale: PX_PER_MM, cx: (lo[0] + hi[0]) / 2.0, cy: (lo[1] + hi[1]) / 2.0, width: w.ceil() as u32, height: h.ceil() as u32 };
     let d = render::draw(m, level, view);
     let mut out = Vec::new();
-    for (prim, owner) in d.prims.iter().zip(&d.owners) {
+    for (i, (prim, owner)) in d.prims.iter().zip(&d.owners).enumerate() {
         let (Prim::Line { pts, closed, .. }, Some(id)) = (prim, owner) else { continue };
-        if !keep(*id) {
+        if !keep(*id) || !matches!(d.parts.get(i), Some(Part::Cut | Part::Projection) | None) {
             continue;
         }
         let category = m.elements.get(*id).map_or("other", |e| e.category()).to_string();
@@ -43,6 +44,9 @@ pub fn plan_lines(m: &Model, level: Id, keep: impl Fn(Id) -> bool) -> Vec<(Strin
     out
 }
 
+/// The ACI colour every layer of a flattened drawing has: grey.
+const GREY: u32 = 8;
+
 /// To a hundredth of a millimetre: what `f32` pixels leave of a line's end.
 fn round(p: P2) -> P2 {
     P2((p.0 * 100.0).round() / 100.0, (p.1 * 100.0).round() / 100.0)
@@ -54,9 +58,9 @@ pub fn dxf(lines: &[(String, P2, P2)]) -> String {
     layers.sort_unstable();
     layers.dedup();
     let mut out = String::from("0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n");
-    for (i, l) in layers.iter().enumerate() {
-        // Colours 1 to 7, a layer each, so they tell apart in the view.
-        out += &format!("0\nLAYER\n2\n{l}\n70\n0\n62\n{}\n6\nContinuous\n", i % 7 + 1);
+    for l in &layers {
+        // Grey, as a base is: what is drawn over it stands out.
+        out += &format!("0\nLAYER\n2\n{l}\n70\n0\n62\n{GREY}\n6\nContinuous\n");
     }
     out += "0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n";
     for (l, a, b) in lines {

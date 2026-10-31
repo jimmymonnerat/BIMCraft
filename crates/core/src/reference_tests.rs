@@ -221,3 +221,17 @@ fn flattening_can_keep_the_link_and_take_only_some_storeys() {
     fails(&mut s, "flatten_link", json!({"levels": ["Nowhere"]}));
     fails(&mut s, "flatten_link", json!({"keep": true}));
 }
+
+#[test]
+fn a_flattened_storey_keeps_the_outlines_and_leaves_the_hatching_out() {
+    // The sample house: its outer walls are hatched where the plan cuts them.
+    let ifc = folder("hatch").join("Casa.ifc");
+    let mut arq = Session::new();
+    arq.script(crate::sample::SAMPLE).unwrap();
+    run(&mut arq, "save", json!({"path": ifc}));
+    let mut s = Session::new();
+    run(&mut s, "link", json!({"path": ifc}));
+    let r = run(&mut s, "flatten_link", json!({"levels": ["Level 1"]}));
+    let lines = r["drawings"][0]["lines"].as_u64().unwrap();
+    assert!((20..2000).contains(&lines), "outlines, not hatching: {lines} lines");
+}
