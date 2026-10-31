@@ -335,3 +335,5 @@ The Plumbing tab's Base panel (`base.rs`, the `Tool::ScaleRef` clicks in `canvas
 clicks on the base (snapped as drawing is), then a box asks the distance between them in metres, starting from what it measures now (a
 comma or a point; under 0.1 m reads as a wall's thickness does), and runs `scale_by_reference` as one undo step. A refusal (a linked IFC
 off its units, a number that isn't one) is said inside the box, which stays open; the tool stays on afterwards, as Revit's do.
+Set Origin (`Tool::Origin`) is one click, snapped: `set_origin` at that point, then Modify again and the view fitted, so what moved stays
+in sight.

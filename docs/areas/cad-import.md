@@ -104,3 +104,9 @@ is multiplied by `length` over their distance and its `at` moved along the line 
 a scale out of `CAD_SCALE` is refused. A linked model (an IFC or a project) carries its own units, so it is checked and never changed:
 within 0.5 % the reply is a factor of 1, else an error that says the distance it measures and to check the points or the file's units.
 Without `id` it takes the project's only drawing or link, and with several it asks which.
+
+Set Origin (`set_origin`; tests in `crates/core/src/reference_tests.rs`). The point every discipline's project shares, picked on the
+architect's base (a corner of the building), becomes the project's 0, 0: everything with a place in plan, the links and CAD drawings with
+what is drawn over them, moves by minus it in one step, through the motion `move` uses (`relocate`), so walls stay joined and hosted
+elements follow. Levels, sheets, views, schedules and the viewports on sheets stay; a level's extent, a view's crop and a section box are not
+moved yet. The origin where it is already moves nothing.
