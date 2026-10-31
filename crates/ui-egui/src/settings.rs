@@ -94,6 +94,8 @@ pub struct Settings {
     pub high_contrast: [u8; 3],
     /// The system's title bar rather than the window's own, where the window can draw its own.
     pub system_title_bar: bool,
+    /// The other disciplines' tabs (Structure, Electrical, Lightning Protection, Data) beside Plumbing.
+    pub all_disciplines: bool,
 }
 
 impl Settings {
@@ -115,6 +117,7 @@ impl Settings {
             "window": self.window.to_json(),
             "high_contrast": self.high_contrast,
             "system_title_bar": self.system_title_bar,
+            "all_disciplines": self.all_disciplines,
         })
     }
 
@@ -143,6 +146,7 @@ impl Settings {
             window: Window::from_json(&v["window"], base.window),
             high_contrast: colour(&v["high_contrast"]).unwrap_or(base.high_contrast),
             system_title_bar: v["system_title_bar"].as_bool().unwrap_or(base.system_title_bar),
+            all_disciplines: v["all_disciplines"].as_bool().unwrap_or(base.all_disciplines),
         }
     }
 }
@@ -213,8 +217,10 @@ impl BimApp {
 
     /// Keeps the settings in `path`: what it holds now, and from now on what changes.
     pub fn use_settings(&mut self, path: PathBuf) {
-        let now = self.settings_now(ThemePreference::System);
+        // A copy that keeps settings starts with the Plumbing tab alone: the other disciplines are a setting away.
+        let now = Settings { all_disciplines: false, ..self.settings_now(ThemePreference::System) };
         let kept = read(&path).map_or(now.clone(), |v| Settings::from_json(&v, now));
+        self.all_disciplines = kept.all_disciplines;
         (self.lang, self.ribbon_min, self.docking) = (kept.language, kept.ribbon_minimized, kept.docking.clone());
         self.compact = kept.compact;
         self.theme_wanted = Some(kept.theme);
@@ -246,6 +252,7 @@ impl BimApp {
             window: self.window.kept,
             high_contrast: self.scan_contrast,
             system_title_bar: self.system_title_bar,
+            all_disciplines: self.all_disciplines,
         }
     }
 
@@ -364,6 +371,9 @@ impl BimApp {
         {
             self.docking = Docking::default();
         }
+        heading(ui, msg!("Disciplines"));
+        let tip = msg!("Structure, Electrical, Lightning Protection and Data beside Plumbing on the ribbon");
+        ui.checkbox(&mut self.all_disciplines, t("Show the other disciplines' tabs")).on_hover_text(t(tip));
         later(ui, |ui| {
             let (mut scale, mut keys, mut reopen, mut views) = (100.0, true, false, false);
             ui.horizontal(|ui| {

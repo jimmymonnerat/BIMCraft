@@ -218,3 +218,24 @@ fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
     let names: Vec<String> = bimcraft_core::link::seen(m).levels().into_iter().map(|(_, l)| l.name.clone()).collect();
     assert!(names.iter().all(|n| !n.contains(':')), "{names:?}");
 }
+
+#[test]
+fn a_copy_that_keeps_settings_shows_the_plumbing_tab_alone_until_asked() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut h = app("");
+    h.state_mut().use_settings(dir.path().join("settings.json"));
+    h.run();
+    h.get_by_label("Plumbing");
+    for other in ["Structure", "Electrical", "Lightning Protection", "Data"] {
+        assert!(h.query_by_label(other).is_none(), "{other} is hidden");
+    }
+    h.state_mut().all_disciplines = true;
+    h.run();
+    h.get_by_label("Electrical");
+    // Kept for the next start.
+    let ctx = h.ctx.clone();
+    h.state_mut().keep_settings(&ctx);
+    let mut again = app("");
+    again.state_mut().use_settings(dir.path().join("settings.json"));
+    assert!(again.state().all_disciplines);
+}

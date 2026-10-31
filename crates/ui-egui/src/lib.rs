@@ -457,6 +457,9 @@ pub struct BimApp {
     ribbon_bottom: Pos2,
     /// The Compact layout (File > Settings): the bars and palettes flush to the edges, not floating cards.
     compact: bool,
+    /// The Structure, Electrical, Lightning Protection and Data tabs on the ribbon. A copy that keeps no settings shows them;
+    /// one that does starts with the Plumbing tab alone (Settings > User Interface).
+    all_disciplines: bool,
     /// File > Settings, while open, at its page; the settings file, when the app was given one, and what it holds; the
     /// theme it asks for, put in force on the next frame.
     settings_page: Option<settings::Page>,
@@ -968,6 +971,7 @@ impl BimApp {
             grab: egui::Vec2::ZERO,
             ribbon_min: false,
             compact: false,
+            all_disciplines: true,
             ribbon_peek: false,
             scan_contrast: footer::HIGH_CONTRAST,
             ribbon_bottom: Pos2::ZERO,
@@ -2566,6 +2570,7 @@ impl BimApp {
         (fresh.own_title_bar, fresh.system_title_bar) = (self.own_title_bar, self.system_title_bar);
         (fresh.thin, fresh.lang, fresh.snaps, fresh.ribbon_min) = (self.thin, self.lang, self.snaps, self.ribbon_min);
         fresh.compact = self.compact;
+        fresh.all_disciplines = self.all_disciplines;
         fresh.font_finder = self.font_finder;
         fresh.scan_contrast = self.scan_contrast;
         fresh.light_canvas = self.light_canvas;
@@ -2805,6 +2810,9 @@ impl BimApp {
                                 (Tab::Manage, msg!("Manage")),
                                 (Tab::Modify, "Modify"),
                             ] {
+                                if !self.all_disciplines && matches!(tab, Tab::Structure | Tab::Electrical | Tab::Lightning | Tab::Data) {
+                                    continue;
+                                }
                                 let r = tab_button(ui, label, self.tab == tab, false);
                                 if changed && self.tab == tab {
                                     r.scroll_to_me(None);
