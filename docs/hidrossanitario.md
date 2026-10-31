@@ -50,8 +50,8 @@ sem copiar ícones, textos ou conteúdo da AltoQi.
 
 ## Na fila
 
-1. **Pranchas como no QiBuilder** (prioridade, ver vídeo 1): detalhe isométrico por região, tabela de peças, inserir margem
-   (modelo com carimbo), inserir do projeto, pranchas HID/SAN.
+1. **Pranchas como no QiBuilder** (prioridade, ver vídeos 1 e 2): região de detalhe, isométrico com ø/L e marcadores de peça
+   ligados à tabela de peças, vista de parede do ponto, detalhes vivos na prancha, margem de modelo, pranchas HID/SAN.
 2. **Lançamento** como no QiBuilder (depende dos vídeos dessa etapa).
 3. **Cadastro de peças** a partir do banco .AQ do QiBuilder (ou lido pelo conector MCP AltoQi). O cadastro fica fora do
    repositório público.
@@ -74,6 +74,35 @@ sem copiar ícones, textos ou conteúdo da AltoQi.
   condutos, Legenda de peças, Detalhe isométrico, Inserir detalhe, Região de impressão, Gerenciador, Exibir croqui, Exibir
   detalhamento, Exibir vista 3D, Ocultar, Otimizar indicações. Elementos: Preencher área, Criar símbolo, Inserir símbolos,
   Inserir arquivo, Cota ortogonal, Linha de cota alinhada, Indicador, Emendar, Texto, Nuvem de revisão, Tabela de revisão.
+
+**Vídeo 2** (31/10/2026, 5 min, mesmo projeto, montando a prancha HID 06):
+- **Inserir do projeto** traz para a prancha os detalhes das regiões H26, H27 e H28 (banheiro BH da copa): o isométrico, a
+  tabela de peças e as vistas das paredes.
+- O **isométrico** tem cada tubo cotado com diâmetro e comprimento ("ø25 L=1.1") e cada peça com um marcador numerado (F1…F11)
+  que remete à linha da **tabela de peças** ao lado. A tabela agrupa por material/tipo: "PVC rígido soldável – Joelho de
+  redução 90 soldável 32 mm – 25 mm", "Aparelho – Ducha higiênica 25 mm × 1/2"", "Aparelho – Vaso sanitário c/ cx. acoplada
+  1/2"", "PVC Acessórios – Engate flexível cobre cromado com canopla 1/2 – 30 cm", registro de gaveta (RG 1").
+- A **vista da parede** (elevação do ponto) mostra as alturas cotadas (100, 120 cm) e os trechos verticais com ø e L.
+- **Botão direito num detalhe na prancha**: Abrir original, Editar na prancha (com "Concluir edição"), Apagar, Mover,
+  Rotacionar, Espelhar, Copiar, Escalar, Desagrupar, Trazer para frente, Enviar para trás, e comandos de nível (Definir nível
+  atual, Desligar, Travar, Isolar).
+- **Abrir original** abre o detalhe numa aba própria ("Pavimento 1 – Hidráulico – detalhe H27"); **Exibir vista 3D** mostra o 3D
+  só daquele detalhe ("Visão 3D (Detalhe H27)"), com a aba 3D: Enquadrar 3D, Atualização parcial do 3D, Ocultar, Vistas,
+  Configurações, Iluminação, Cor do corte, Perspectiva.
+- Ao voltar à prancha, o QiBuilder **atualiza as pranchas sozinho** ("Atualizando pranchas: abrindo desenhos a serem
+  atualizados (HID 06)… atualizando detalhamentos 25 %… 75 %"). **Os detalhes na prancha são vistas vivas do modelo**: mudou o
+  lançamento, o detalhe e a tabela se refazem.
+
+**O que isso pede do nosso programa** (pranchas):
+1. Região de detalhe na planta (os triângulos de corte), com nome (H26…).
+2. Detalhe isométrico da região: tubos com ø e L, peças com marcadores numerados, ligados a uma tabela de peças agrupada.
+3. Vista da parede de cada ponto, com as alturas cotadas.
+4. Detalhes como vistas vivas na prancha, refeitos quando o modelo muda; abrir o original, editar na prancha, mover, girar,
+   escalar.
+5. Margem/carimbo de modelo (o "Prancha Bim Ac") e árvore de pranchas por disciplina (HID, SAN).
+
+O BIMCraft já tem pranchas, vistas que se refazem do modelo (viewports), cortes, tabelas e 3D: a base existe; falta o detalhe
+isométrico por região, os marcadores de peça ligados à tabela e a vista de parede do ponto.
 
 **Como gravar os próximos**: Recordly, exportar em 720p e qualidade média (até ~80 MB por arquivo; dividir os longos); câmera
 num canto que não cubra o painel Pranchas nem o carimbo; dar zoom nas janelas de diálogo; mandar um resumo escrito, porque a
