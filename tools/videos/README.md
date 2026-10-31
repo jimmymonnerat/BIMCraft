@@ -23,11 +23,12 @@ A imagem sozinha mostra cliques sem intenção; a fala sozinha cita "esse aqui" 
        --vocabulario tools/videos/vocabulario.txt --vocabulario VOCABULARIO-PRIVADO.txt
    ```
 
-   Ela escreve, por vídeo: a transcrição (`.txt` e legenda `.srt`), os quadros-chave (um depois de cada mudança de tela, já
-   assentada, e pelo menos um a cada 15 s), folhas de quadros com o tempo marcado, o `roteiro.md` (cada quadro com o que foi
-   dito enquanto estava na tela) e `dados.json`. O modelo de voz é baixado uma vez e conferido por SHA-256. O vocabulário
-   privado (nomes de clientes e projetos dele) fica fora do repositório. Um vídeo sem faixa de áudio é processado só pela
-   imagem.
+   Ela escreve, por vídeo: a transcrição (`.txt` e legenda `.srt`, cortada em frases pelo tempo de cada palavra), os
+   quadros-chave (um depois de cada mudança de tela, já assentada, e pelo menos um a cada 15 s), folhas de quadros com o
+   tempo marcado, o `roteiro.md` (cada quadro com o que foi dito enquanto estava na tela) e `dados.json`. O modelo de voz é
+   baixado uma vez e conferido por SHA-256. O vocabulário e as correções privadas (nomes de clientes, projetos e pessoas)
+   ficam fora do repositório (`--vocabulario` e `--correcoes` aceitam mais de um arquivo). Um vídeo sem faixa de áudio é
+   processado só pela imagem. `--sem-quadros` refaz só a fala, mantendo os quadros de uma análise anterior.
 3. **Ler.** Ler o roteiro inteiro e as folhas; abrir em tamanho cheio os quadros onde aparece uma janela, um menu ou uma
    tabela (as folhas reduzem a imagem e o texto pequeno some).
 4. **Cruzar com o modelo.** Com o projeto do vídeo aberto no QiBuilder e o conector ligado, consultar o que o vídeo mostra:
@@ -42,9 +43,11 @@ A imagem sozinha mostra cliques sem intenção; a fala sozinha cita "esse aqui" 
    - *Dados do modelo*: o que o conector confirmou ou acrescentou.
    - *Requisitos para o nosso programa*: o que a etapa pede, já em termos de recurso.
    - *Perguntas para o Jimmy*: o que ficou ambíguo, para ele responder por texto ou no vídeo seguinte.
-6. **Consolidar.** Atualizar o índice (`00 - índice.md` na pasta do Drive: todos os vídeos, a etapa, o estado da análise) e,
-   neste repositório, o catálogo de comandos e os requisitos em [docs/hidrossanitario.md](../../docs/hidrossanitario.md), sem
-   nomes de clientes nem caminhos: o repositório é público.
+6. **Consolidar.** Na pasta do Drive: o índice (`00 - índice.md`: todos os vídeos, a etapa, o estado da análise, os
+   requisitos R1, R2…), a transcrição ao lado de cada vídeo e, em `analises/<vídeo>/`, o roteiro, as folhas e os quadros em
+   `quadros.zip`, para a próxima conversa rever a tela sem reprocessar o vídeo. Neste repositório: o catálogo de comandos e
+   os requisitos em [docs/hidrossanitario.md](../../docs/hidrossanitario.md), sem nomes de clientes, de produtos do cadastro
+   nem caminhos: o repositório é público.
 
 ## O que pedir nas gravações
 

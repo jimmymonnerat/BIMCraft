@@ -168,14 +168,36 @@ def transcribe(video: Path, model_dir: Path, prompt: str, fixes) -> list[Segment
     if audio.size == 0:
         return []
     model = WhisperModel(str(model_dir), device="cpu", compute_type="int8", cpu_threads=os.cpu_count() or 2)
-    segs, _ = model.transcribe(audio, language="pt", vad_filter=True, beam_size=5, initial_prompt=prompt or None)
+    segs, _ = model.transcribe(audio, language="pt", vad_filter=True, beam_size=5, initial_prompt=prompt or None,
+                               word_timestamps=True)
     out = []
     for s in segs:
-        text = s.text.strip()
-        for pattern, repl in fixes:
-            text = pattern.sub(repl, text)
-        out.append(Segment(round(s.start, 2), round(s.end, 2), text))
+        for start, end, text in phrases(s):
+            for pattern, repl in fixes:
+                text = pattern.sub(repl, text)
+            out.append(Segment(round(start, 2), round(end, 2), text))
     return out
+
+
+def phrases(seg, short: float = 3.0, long: float = 10.0) -> list[tuple[float, float, str]]:
+    """A recognised segment cut into phrases by its words' times: at a full stop, at a comma once a phrase is `short`
+    seconds long, and anywhere once it is `long`, so each phrase lines up with what was on screen while it was said."""
+    words = getattr(seg, "words", None) or []
+    if not words:
+        return [(seg.start, seg.end, seg.text.strip())]
+    out, chunk, start = [], [], None
+    for w in words:
+        if start is None:
+            start = w.start
+        chunk.append(w.word)
+        took = w.end - start
+        mark = w.word.strip()[-1:] if w.word.strip() else ""
+        if mark in ".?!" or (mark in ",;:" and took >= short) or took >= long:
+            out.append((start, w.end, "".join(chunk).strip()))
+            chunk, start = [], None
+    if chunk and start is not None:
+        out.append((start, words[-1].end, "".join(chunk).strip()))
+    return [p for p in out if p[2]]
 
 
 # ---------- frames ----------
@@ -304,9 +326,14 @@ def analyse(video: Path, out_root: Path, args, model_dir: Path | None, prompt: s
         (out / f"{name}.srt").write_text(
             "".join(f"{i}\n{srt_clock(s.start)} --> {srt_clock(s.end)}\n{s.text}\n\n" for i, s in enumerate(segments, 1)),
             encoding="utf-8")
-    moments = pick(scene_scores(video), length, args.limiar, args.intervalo_min, args.intervalo_max, args.assentar)
-    frames = grab(video, moments, out / "quadros")
-    folhas = sheets(frames, out / "quadros", out / "folhas")
+    kept = out / "dados.json"
+    if args.sem_quadros and kept.exists():
+        old = json.loads(kept.read_text(encoding="utf-8"))
+        frames, folhas = [Frame(**f) for f in old["quadros"]], old["folhas"]
+    else:
+        moments = pick(scene_scores(video), length, args.limiar, args.intervalo_min, args.intervalo_max, args.assentar)
+        frames = grab(video, moments, out / "quadros")
+        folhas = sheets(frames, out / "quadros", out / "folhas")
     text = timeline(name, length, frames, segments)
     if silent:
         text = text.replace("\n\n|", "\n\n**O vídeo não tem faixa de áudio: não há fala a transcrever.**\n\n|", 1)
@@ -329,6 +356,7 @@ def main() -> None:
     a.add_argument("--correcoes", type=Path, action="append", default=None,
                    help="trocas aplicadas ao texto (padrão: tools/videos/correcoes.txt)")
     a.add_argument("--sem-transcricao", action="store_true")
+    a.add_argument("--sem-quadros", action="store_true", help="manter os quadros de uma análise anterior (só refaz a fala)")
     a.add_argument("--limiar", type=float, default=0.04, help="quanto a tela precisa mudar para virar quadro-chave")
     a.add_argument("--intervalo-min", type=float, default=2.0)
     a.add_argument("--intervalo-max", type=float, default=15.0)
