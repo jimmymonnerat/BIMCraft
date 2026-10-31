@@ -123,6 +123,18 @@ pub static ALL: &[Command] = &[
          `moved` (how many elements) and `by` [dx, dy]",
         set_origin,
     ),
+    edit(
+        "flatten_link",
+        "Flatten Link",
+        &[],
+        "{id?, levels?: [level, …], keep_link?} the architect's linked model cut at each storey as its plan cuts it, and its lines \
+         kept as a drawing of the project's own: a DXF in millimetres named `<link> - <level>`, its lines on a layer for each \
+         category (wall, door, window, component…), placed on that level as an imported drawing is, so the design is drawn over \
+         light 2D lines. `id` the link (the project's only one by default); `levels` by name or id (every level by default); a \
+         storey flattened again is drawn anew. The link goes unless `keep_link`: the file stays where it is, to link again. \
+         Returns `drawings` ({level, cad, lines, id}) and `link_removed`",
+        flatten_link,
+    ),
     other(
         "levels_in",
         "Levels in a File",
@@ -10468,4 +10480,79 @@ fn set_origin(s: &mut Session, p: &Value) -> R {
         .collect();
     relocate(c, s, &ids, &mo, None)?;
     Ok(json!({"moved": ids.len(), "by": [by.0, by.1]}))
+}
+
+/// The linked model cut at each storey and kept as the project's own drawing of lines, one for each level.
+fn flatten_link(s: &mut Session, p: &Value) -> R {
+    let c = "flatten_link";
+    only(c, p, &["id", "levels", "keep_link"])?;
+    let keep_link = flag(c, p, "keep_link")?;
+    let m = &s.model;
+    let links: Vec<Id> = m.elements.iter().filter(|(_, e)| matches!(e, Element::Link(_))).map(|(id, _)| *id).collect();
+    let link_id = match p.get("id") {
+        v if absent(v) => match links.as_slice() {
+            [] => return Err(bad(c, "there is no link to flatten: link the architect's model first")),
+            [one] => *one,
+            _ => return Err(bad(c, format!("the project has {} links: say which with `id`", links.len()))),
+        },
+        Some(v) => element_id(c, m, v)?,
+        None => return Err(bad(c, "`id` is required")),
+    };
+    let Some(Element::Link(link)) = m.elements.get(link_id).cloned() else {
+        return Err(bad(c, format!("element {link_id} is not a link")));
+    };
+    if !m.loaded.contains_key(&link.path) {
+        return Err(bad(c, format!("{} isn't read: `reload` it, or link its file again", link.name)));
+    }
+    // The levels to flatten: those named, or every one, lowest first.
+    let mut all: Vec<(Id, String, f64)> = m.levels().into_iter().map(|(id, l)| (id, l.name.clone(), l.elevation)).collect();
+    all.sort_by(|a, b| a.2.total_cmp(&b.2));
+    let levels: Vec<(Id, String)> = match p.get("levels") {
+        None | Some(Value::Null) => all.iter().map(|(id, n, _)| (*id, n.clone())).collect(),
+        Some(Value::Array(a)) if a.len() <= MAX_POINTS => a
+            .iter()
+            .map(|v| {
+                let id = m.elements.id(level_param(c, m, &json!({"level": v}), "level")?).unwrap_or_default();
+                all.iter()
+                    .find(|(l, ..)| *l == id)
+                    .map(|(l, n, _)| (*l, n.clone()))
+                    .ok_or_else(|| bad(c, format!("`levels`: {v} is not a level")))
+            })
+            .collect::<Result<_, _>>()?,
+        Some(v) => return Err(bad(c, format!("`levels` is a list of levels by name or id, not {v}"))),
+    };
+    // Only this link drawn: the others are taken out of what the cut sees.
+    let mut only_this = (**m).clone();
+    for other in links.iter().filter(|id| **id != link_id) {
+        only_this.elements.remove(*other);
+    }
+    let seen = crate::link::seen(&Arc::new(only_this));
+    let mut made = Vec::new();
+    for (level, level_name) in &levels {
+        let lines = crate::flatten::plan_lines(&seen, *level, crate::link::is_linked);
+        if lines.is_empty() {
+            continue;
+        }
+        let name = format!("{} - {level_name}", link.name);
+        let cad = crate::cad::Cad::new(&name, None, crate::flatten::dxf(&lines).into_bytes()).map_err(|e| bad(c, e))?;
+        let model = s.model_mut();
+        // Drawn anew: the drawing of the same name and where it was placed go first.
+        let placed: Vec<Id> =
+            model.elements.iter().filter(|(_, e)| matches!(e, Element::CadImport(ci) if ci.cad == name)).map(|(id, _)| *id).collect();
+        for id in placed {
+            model.elements.remove(id);
+        }
+        model.cads.insert(name.clone(), cad);
+        let reply = import_cad(s, &json!({"cad": name, "level": level, "position": "origin", "units": "mm"}))?;
+        made.push(json!({"level": level_name, "cad": name, "lines": lines.len(), "id": reply["id"]}));
+    }
+    if made.is_empty() {
+        return Err(bad(c, format!("{} has nothing a plan of these levels cuts or sees", link.name)));
+    }
+    if !keep_link {
+        let model = s.model_mut();
+        model.elements.remove(link_id);
+        model.loaded.remove(&link.path);
+    }
+    Ok(json!({"drawings": made, "link_removed": !keep_link}))
 }

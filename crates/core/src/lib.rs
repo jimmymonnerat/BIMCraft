@@ -36,6 +36,7 @@ pub mod fittings;
 #[cfg(test)]
 mod fittings_tests;
 mod fixtures;
+pub mod flatten;
 mod font;
 pub mod geom;
 pub mod graphics;

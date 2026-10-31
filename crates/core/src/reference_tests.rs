@@ -141,3 +141,83 @@ fn an_origin_must_be_a_point() {
     let r = run(&mut s, "set_origin", json!({"at": [0, 0]}));
     assert_eq!(r["moved"], json!(0), "the origin where it is moves nothing");
 }
+
+/// An architect's model of two storeys saved as IFC: a room on the ground floor, one wall upstairs.
+fn architect(test: &str) -> std::path::PathBuf {
+    let ifc = folder(test).join("Arquitetura.ifc");
+    let mut arq = Session::new();
+    run(&mut arq, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
+    run(&mut arq, "wall", json!({"points": [[0, 0], [6000, 0], [6000, 4000], [0, 4000]], "closed": true}));
+    run(&mut arq, "wall", json!({"points": [[0, 0], [6000, 0]], "level": "Superior"}));
+    run(&mut arq, "save", json!({"path": ifc}));
+    ifc
+}
+
+/// The CAD drawings placed in the project: (level's name, drawing's name).
+fn drawings(s: &Session) -> Vec<(String, String)> {
+    let mut d: Vec<(String, String)> = s
+        .model
+        .elements
+        .values()
+        .filter_map(|e| match e {
+            Element::CadImport(ci) => Some((s.model.level(ci.level).map(|l| l.name.clone()).unwrap_or_default(), ci.cad.clone())),
+            _ => None,
+        })
+        .collect();
+    d.sort();
+    d
+}
+
+#[test]
+fn flattening_the_architect_s_model_makes_a_drawing_of_lines_for_each_storey_and_takes_the_link_away() {
+    let ifc = architect("flatten");
+    let mut s = Session::new();
+    run(&mut s, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
+    run(&mut s, "link", json!({"path": ifc}));
+    let r = run(&mut s, "flatten_link", json!({}));
+    assert_eq!(
+        drawings(&s),
+        vec![("Superior".to_string(), "Arquitetura - Superior".to_string()), ("Térreo".to_string(), "Arquitetura - Térreo".to_string())],
+        "{r}"
+    );
+    assert!(!s.model.elements.values().any(|e| matches!(e, Element::Link(_))), "the link goes: its lines stand for it");
+    assert_eq!(s.model.check(), Ok(()));
+    // The ground floor's lines are the walls' faces where the plan cuts them, in millimetres where the walls are.
+    let cad = &s.model.cads["Arquitetura - Térreo"];
+    let lines: Vec<(P2, P2)> = cad
+        .dxf()
+        .entities
+        .iter()
+        .filter_map(|e| match e.shape {
+            crate::dxf::Shape::Line(a, b) => Some((a, b)),
+            _ => None,
+        })
+        .collect();
+    assert!(lines.len() >= 8, "{} lines", lines.len());
+    let along_south = lines.iter().filter(|(a, b)| (a.1 - b.1).abs() < 1.0 && (a.0 - b.0).abs() > 5000.0).count();
+    assert!(along_south >= 2, "both faces of the south wall: {lines:?}");
+    assert!(lines.iter().all(|(a, b)| a.0 > -500.0 && b.0 < 6500.0 && a.1 > -500.0 && b.1 < 4500.0), "where the building is");
+    // One undo step brings the link back and takes the drawings away.
+    run(&mut s, "undo", json!({}));
+    assert!(drawings(&s).is_empty());
+    assert!(s.model.elements.values().any(|e| matches!(e, Element::Link(_))));
+}
+
+#[test]
+fn flattening_can_keep_the_link_and_take_only_some_storeys() {
+    let ifc = architect("flatten-some");
+    let mut s = Session::new();
+    run(&mut s, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
+    run(&mut s, "link", json!({"path": ifc}));
+    run(&mut s, "flatten_link", json!({"levels": ["Térreo"], "keep_link": true}));
+    assert_eq!(drawings(&s), vec![("Térreo".to_string(), "Arquitetura - Térreo".to_string())]);
+    assert!(s.model.elements.values().any(|e| matches!(e, Element::Link(_))));
+    // Again: the storey's drawing is made anew, not a second one.
+    run(&mut s, "flatten_link", json!({"levels": ["Térreo"], "keep_link": true}));
+    assert_eq!(drawings(&s).len(), 1);
+    let mut empty = Session::new();
+    let e = fails(&mut empty, "flatten_link", json!({}));
+    assert!(e.contains("link"), "{e}");
+    fails(&mut s, "flatten_link", json!({"levels": ["Nowhere"]}));
+    fails(&mut s, "flatten_link", json!({"keep": true}));
+}
