@@ -112,7 +112,8 @@ impl Category {
         match self {
             Category::Furniture => &["IFCFURNISHINGELEMENT", "IFCSYSTEMFURNITUREELEMENT"],
             // IFC2x3 has no sanitary terminal of its own: a basin or a WC is a flow terminal there, as Revit and ArchiCAD export it.
-            Category::Plumbing => &["IFCFLOWTERMINAL"],
+            // Revit writes a maker's fixture family (a Deca basin, a tap) as a plain distribution element.
+            Category::Plumbing => &["IFCFLOWTERMINAL", "IFCDISTRIBUTIONELEMENT"],
             _ => &[],
         }
     }

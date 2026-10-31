@@ -259,3 +259,24 @@ fn an_ifc2x3_flow_terminal_comes_in_as_a_plumbing_fixture_and_is_flattened() {
     assert!(cad.dxf().entities.iter().any(|e| e.layer == "component"), "the WC is drawn");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_distribution_element_as_revit_writes_a_maker_s_fixture_comes_in_and_is_flattened() {
+    let dir = folder("distribution-element");
+    let ifc4 = dir.join("four.ifc");
+    let mut arq = Session::new();
+    run(&mut arq, "new", json!({"language": "pt"}));
+    run(&mut arq, "component", json!({"family": "Lavatório", "at": [1000, 1000]}));
+    run(&mut arq, "save", json!({"path": ifc4}));
+    let text = std::fs::read_to_string(&ifc4).unwrap();
+    let line = text.lines().find(|l| l.contains("=IFCSANITARYTERMINAL(")).unwrap().to_string();
+    let revit = line.replacen("=IFCSANITARYTERMINAL(", "=IFCDISTRIBUTIONELEMENT(", 1).replace(",.NOTDEFINED.);", ");");
+    let ifc = dir.join("Arquitetura.ifc");
+    std::fs::write(&ifc, text.replace(&line, &revit)).unwrap();
+    let mut s = Session::new();
+    run(&mut s, "new", json!({"language": "pt"}));
+    run(&mut s, "link", json!({"path": ifc}));
+    run(&mut s, "flatten_link", json!({"levels": ["Nível 1"]}));
+    assert!(s.model.cads["Arquitetura - Nível 1"].dxf().entities.iter().any(|e| e.layer == "component"), "the basin is drawn");
+    let _ = std::fs::remove_dir_all(&dir);
+}
