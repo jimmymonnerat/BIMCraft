@@ -330,3 +330,8 @@ Choose IFC… takes the architect's model the project is drawn over: its levels 
 the storeys follow them (a storey between each two levels, its height their difference, the last level the top; the project named after the
 file while no name is typed), so the link's levels fall on the project's and none comes in as `link: level`. Create links it once the project
 is saved (beside the project, by a path relative to its folder when it is in it, so the folder can move) and saves again.
+
+The Plumbing tab's Base panel (`base.rs`, the `Tool::ScaleRef` clicks in `canvas.rs`; tests in `tests/cad.rs`): Scale by Reference takes two
+clicks on the base (snapped as drawing is), then a box asks the distance between them in metres, starting from what it measures now (a
+comma or a point; under 0.1 m reads as a wall's thickness does), and runs `scale_by_reference` as one undo step. A refusal (a linked IFC
+off its units, a number that isn't one) is said inside the box, which stays open; the tool stays on afterwards, as Revit's do.

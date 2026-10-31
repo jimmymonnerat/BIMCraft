@@ -15,7 +15,7 @@ msgstr ""
 msgid "Arm Width"
 msgstr ""
 
-#: crates/core/src/commands.rs:10310
+#: crates/core/src/commands.rs:10322
 msgid "Bars"
 msgstr ""
 
@@ -79,7 +79,7 @@ msgstr ""
 msgid "Copper"
 msgstr ""
 
-#: crates/core/src/commands.rs:949
+#: crates/core/src/commands.rs:961
 msgid "Copy"
 msgstr ""
 
@@ -107,7 +107,7 @@ msgstr ""
 msgid "Data Outlet"
 msgstr ""
 
-#: crates/core/src/commands.rs:7150
+#: crates/core/src/commands.rs:7162
 msgid "Dependent"
 msgstr ""
 
@@ -131,7 +131,7 @@ msgstr ""
 msgid "Diagonal Up"
 msgstr ""
 
-#: crates/core/src/commands.rs:10217
+#: crates/core/src/commands.rs:10229
 #: crates/core/src/fixtures.rs:173
 msgid "Diameter"
 msgstr ""
@@ -168,13 +168,13 @@ msgstr ""
 msgid "East"
 msgstr ""
 
-#: crates/core/src/commands.rs:10236
+#: crates/core/src/commands.rs:10248
 #: crates/core/src/fixtures.rs:193
 msgid "Elbow 90"
 msgstr ""
 
-#: crates/core/src/commands.rs:6934
-#: crates/core/src/commands.rs:8601
+#: crates/core/src/commands.rs:6946
+#: crates/core/src/commands.rs:8613
 msgid "Elevation"
 msgstr ""
 
@@ -271,7 +271,7 @@ msgstr ""
 msgid "Insulation"
 msgstr ""
 
-#: crates/core/src/commands.rs:10310
+#: crates/core/src/commands.rs:10322
 msgid "Item"
 msgstr ""
 
@@ -295,8 +295,8 @@ msgstr ""
 msgid "Length"
 msgstr ""
 
-#: crates/core/src/commands.rs:2295
-#: crates/core/src/commands.rs:4435
+#: crates/core/src/commands.rs:2307
+#: crates/core/src/commands.rs:4447
 #: crates/core/src/model.rs:2503
 msgid "Level"
 msgstr ""
@@ -317,11 +317,11 @@ msgstr ""
 msgid "Masking"
 msgstr ""
 
-#: crates/core/src/commands.rs:5472
+#: crates/core/src/commands.rs:5484
 msgid "Mass"
 msgstr ""
 
-#: crates/core/src/commands.rs:10328
+#: crates/core/src/commands.rs:10340
 msgid "Material List"
 msgstr ""
 
@@ -405,11 +405,11 @@ msgstr ""
 msgid "Porcelain"
 msgstr ""
 
-#: crates/core/src/commands.rs:2256
+#: crates/core/src/commands.rs:2268
 msgid "Project"
 msgstr ""
 
-#: crates/core/src/commands.rs:10310
+#: crates/core/src/commands.rs:10322
 msgid "Quantity"
 msgstr ""
 
@@ -433,7 +433,7 @@ msgstr ""
 msgid "Roof tiles"
 msgstr ""
 
-#: crates/core/src/commands.rs:5697
+#: crates/core/src/commands.rs:5709
 msgid "Room"
 msgstr ""
 
@@ -461,8 +461,8 @@ msgstr ""
 msgid "Seat Height"
 msgstr ""
 
-#: crates/core/src/commands.rs:6911
-#: crates/core/src/commands.rs:8600
+#: crates/core/src/commands.rs:6923
+#: crates/core/src/commands.rs:8612
 msgid "Section"
 msgstr ""
 
@@ -538,7 +538,7 @@ msgstr ""
 msgid "Switch"
 msgstr ""
 
-#: crates/core/src/commands.rs:10310
+#: crates/core/src/commands.rs:10322
 msgid "System"
 msgstr ""
 
@@ -546,7 +546,7 @@ msgstr ""
 msgid "Table"
 msgstr ""
 
-#: crates/core/src/commands.rs:10237
+#: crates/core/src/commands.rs:10249
 #: crates/core/src/fixtures.rs:202
 msgid "Tee"
 msgstr ""
@@ -583,11 +583,11 @@ msgstr ""
 msgid "UP"
 msgstr ""
 
-#: crates/core/src/commands.rs:10310
+#: crates/core/src/commands.rs:10322
 msgid "Unit"
 msgstr ""
 
-#: crates/core/src/commands.rs:7291
+#: crates/core/src/commands.rs:7303
 msgid "Unnamed"
 msgstr ""
 
@@ -607,7 +607,7 @@ msgstr ""
 msgid "WC"
 msgstr ""
 
-#: crates/core/src/commands.rs:190
+#: crates/core/src/commands.rs:202
 msgid "Wall"
 msgstr ""
 

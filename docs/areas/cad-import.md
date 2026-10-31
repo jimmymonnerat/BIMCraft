@@ -97,3 +97,10 @@ and whether it's for the current view only; it runs `import_cad` on the plan on 
 the box open with the reason when a file can't come in. The Properties palette shows an import's drawing, file, unit, counts,
 level, position, angle and scale, and a drop-down for its colours. Visibility/Graphics has an Imported Categories tab: the
 category's row, and under each drawing of the project a check box for each of its layers, cleared for those the view hides. A right click on linked drawings selected offers Reload CAD, which runs `reload_cad` for each.
+
+Scale by Reference (`scale_by_reference`; tests in `crates/core/src/reference_tests.rs`). The base a project is drawn over is set to scale
+as a designer sets it: two points where they are now (`from`, `to`) and the distance they really are (`length`, mm). A drawing's `scale`
+is multiplied by `length` over their distance and its `at` moved along the line from `from`, so the first point clicked stays where it is;
+a scale out of `CAD_SCALE` is refused. A linked model (an IFC or a project) carries its own units, so it is checked and never changed:
+within 0.5 % the reply is a factor of 1, else an error that says the distance it measures and to check the points or the file's units.
+Without `id` it takes the project's only drawing or link, and with several it asks which.
