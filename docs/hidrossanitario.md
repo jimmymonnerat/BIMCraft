@@ -62,6 +62,20 @@ sem copiar ícones, textos ou conteúdo da AltoQi.
 
 ## Análise dos vídeos
 
+**O que ele disse nos vídeos 1 e 2** (transcrições em Drive > DIVERSOS > treinamento ia, um .txt por vídeo):
+- A **geração de pranchas e o detalhamento são o principal gargalo** e o que ele mais quer **automatizar** no programa novo.
+- Estimou **cerca de 5 horas** só organizando 13 pranchas (6 HID, 7 SAN) para impressão num projeto.
+- O que toma tempo: cada "Inserir do projeto" demora a carregar; os detalhes não cabem e ele reorganiza à mão (o que não
+  cabe vai para uma prancha nova); os detalhes ficam **desalinhados** e arrumar a prancha "harmônica aos olhos" é trabalho à
+  parte; achar e ocultar um tubo cortado que aparece como "bolinha" num corte levou ~3 minutos (abrir original > vista 3D >
+  ocultar > atualizar pranchas).
+- Ordem dos detalhes por número (H10, H11, …), em sequência pela prancha; detalhes que "casam" (24 com 25) ficam lado a lado.
+- No isométrico indica cada peça e põe a legenda de peças ao lado; as **alturas ele define no corte**.
+
+**Consequência para a fila**: a prioridade das pranchas é **montagem automática**: o programa distribui os detalhes de um
+pavimento em pranchas com a margem dele, em ordem, alinhados em grade, abrindo prancha nova quando não cabe, e deixa só o
+ajuste fino para ele. Tubos cortados que só viram um ponto num corte devem sumir sozinhos.
+
 **Vídeo 1** (31/10/2026, 4 min, projeto "hidrossanitario Ferlim", etapa de pranchas):
 - Na planta, regiões de detalhe marcadas com triângulos vermelhos de corte em volta de cada ambiente molhado (H21, H24, H25…).
 - **Detalhe isométrico** por região: isométrico + tabela de peças ao lado + vistas das paredes.
