@@ -159,10 +159,10 @@ impl BimApp {
             return;
         }
         // The architect's model, linked once the project has a folder to find it from, and saved with it.
-        if let Some(link) = c.link {
-            if self.run("link", json!({"path": link})).is_none() || !self.save_to(&c.path) {
-                return;
-            }
+        if let Some(link) = c.link
+            && (self.run("link", json!({"path": link})).is_none() || !self.save_to(&c.path))
+        {
+            return;
         }
         self.status = crate::Status { text: tf("Project created in {}", &[&c.path.display().to_string()]), error: false };
         self.autosave_document();
