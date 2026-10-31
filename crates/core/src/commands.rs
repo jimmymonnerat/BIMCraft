@@ -101,6 +101,18 @@ pub static ALL: &[Command] = &[
          a relative one is relative to this project's file. `name` defaults to the file's. Returns `id`, `name`, `elements`",
         link_model,
     ),
+    edit(
+        "scale_by_reference",
+        "Scale by Reference",
+        &[],
+        "{from: [x, y], to: [x, y], length, id?} the base the project is drawn over set to scale by two points of a known distance, \
+         as a designer clicks the two faces of a 15 cm wall: `from` and `to` are where they are now (mm), `length` the distance they \
+         are (mm). A CAD drawing (`import_cad`) is scaled by length over their distance, `from` staying where it is. A linked \
+         model (`link`, an IFC or a project) carries its own units, so it is only checked: within 0.5 % it replies a factor of 1, \
+         else it says the distance it measures. `id` names the drawing or the link; without it, the project's only one. Returns \
+         `factor`, `id` and `measured` (mm)",
+        scale_by_reference,
+    ),
     other(
         "levels_in",
         "Levels in a File",
@@ -10358,4 +10370,68 @@ fn levels_in(s: &mut Session, p: &Value) -> R {
     let mut levels: Vec<(String, f64)> = other.levels().into_iter().map(|(_, l)| (l.name.clone(), l.elevation)).collect();
     levels.sort_by(|a, b| a.1.total_cmp(&b.1));
     Ok(json!({"levels": levels.iter().map(|(name, elevation)| json!({"name": name, "elevation": elevation})).collect::<Vec<_>>()}))
+}
+
+/// How near a link's measure must be to the distance given to be taken as at scale.
+const AT_SCALE: f64 = 0.005;
+
+/// The base (a CAD drawing or a link) to scale by two points of a known distance: the drawing scaled, a link checked.
+fn scale_by_reference(s: &mut Session, p: &Value) -> R {
+    let c = "scale_by_reference";
+    only(c, p, &["from", "to", "length", "id"])?;
+    let from = point_req(c, p, "from")?;
+    let to = point_req(c, p, "to")?;
+    let length = num(c, p, "length")?.ok_or_else(|| bad(c, "`length`, the distance the two points are in mm, is required"))?;
+    if length <= 0.0 {
+        return Err(bad(c, format!("`length` is a distance in mm, more than 0, not {length}")));
+    }
+    let measured = from.dist(to);
+    if measured < 1.0 {
+        return Err(bad(c, "`from` and `to` are the same point: click two points a known distance apart"));
+    }
+    let m = &s.model;
+    let id = match p.get("id") {
+        v if absent(v) => {
+            let bases: Vec<Id> =
+                m.elements.iter().filter(|(_, e)| matches!(e, Element::CadImport(_) | Element::Link(_))).map(|(id, _)| *id).collect();
+            match bases.as_slice() {
+                [] => return Err(bad(c, "there is nothing to scale: import a drawing or link a model first")),
+                [one] => *one,
+                _ => return Err(bad(c, format!("the project has {} drawings and links: say which with `id`", bases.len()))),
+            }
+        }
+        Some(v) => element_id(c, m, v)?,
+        None => return Err(bad(c, "`id` is required")),
+    };
+    let factor = length / measured;
+    match m.elements.get(id) {
+        Some(Element::Link(l)) => {
+            if (factor - 1.0).abs() > AT_SCALE {
+                return Err(bad(
+                    c,
+                    format!(
+                        "{} is a linked model, which carries its own units: these points are {measured:.1} mm apart in it, not \
+                         {length:.1}. Check the points clicked, or the units the file was exported in",
+                        l.name
+                    ),
+                ));
+            }
+            Ok(json!({"id": id, "factor": 1.0, "measured": measured}))
+        }
+        Some(Element::CadImport(ci)) => {
+            let scale = ci.scale * factor;
+            if !crate::model::CAD_SCALE.contains(&scale) {
+                let (lo, hi) = (crate::model::CAD_SCALE.start(), crate::model::CAD_SCALE.end());
+                return Err(bad(c, format!("that makes a scale of {scale} mm to each unit of the drawing, out of {lo} to {hi}")));
+            }
+            // `from` stays put: the drawing's origin moves along the line from it.
+            let at = from - (from - ci.at) * factor;
+            if let Some(Element::CadImport(ci)) = s.model_mut().elements.get_mut(id) {
+                ci.scale = scale;
+                ci.at = at;
+            }
+            Ok(json!({"id": id, "factor": factor, "measured": measured}))
+        }
+        _ => Err(bad(c, format!("element {id} is neither a CAD drawing nor a linked model"))),
+    }
 }

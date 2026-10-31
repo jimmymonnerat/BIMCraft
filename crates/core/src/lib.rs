@@ -64,6 +64,8 @@ pub mod phasing;
 pub mod rebar;
 #[cfg(test)]
 mod rebar_tests;
+#[cfg(test)]
+mod reference_tests;
 pub mod reinforce;
 #[cfg(test)]
 mod reinforce_tests;
