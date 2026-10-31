@@ -236,7 +236,8 @@ numa pasta do Drive dele, que a sessão lê pelo computador ligado; o processo d
 ## Série 2: um projeto do zero, nos dois programas
 
 A partir de 31/10/2026 ele grava um projeto novo (uma residência térrea) do começo ao fim no QiBuilder, uma etapa por vídeo, e
-o programa é preparado para repetir a mesma etapa. Os relatórios de cada vídeo ficam na pasta de vídeos do Drive dele.
+o programa é preparado para repetir a mesma etapa. Os relatórios de cada vídeo ficam na pasta de vídeos do Drive dele; o
+ciclo de cada vídeo está em [tools/videos](../tools/videos/README.md) ("Série 2: um vídeo, um ciclo").
 
 | # | Duração | Etapa | O que pede ao programa | Feito |
 |---|---|---|---|---|

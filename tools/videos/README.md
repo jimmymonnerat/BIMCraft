@@ -49,6 +49,33 @@ A imagem sozinha mostra cliques sem intenção; a fala sozinha cita "esse aqui" 
    os requisitos em [docs/hidrossanitario.md](../../docs/hidrossanitario.md), sem nomes de clientes, de produtos do cadastro
    nem caminhos: o repositório é público.
 
+## Série 2: um vídeo, um ciclo
+
+Desde a série 2 cada vídeo é uma etapa de um projeto feito nos dois programas: o vídeo é analisado e o programa já é preparado
+para a mesma etapa. Para o ciclo não pesar:
+
+1. **Uma conversa por vídeo.** O que importa fica fora da conversa: o código e os registros neste fork; os relatórios e o
+   índice na pasta do projeto, no Drive dele; o vocabulário e as correções com nomes de clientes numa pasta `_privado` do
+   Drive. Uma conversa nova começa por eles e não refaz nada.
+2. **Numa máquina nova**, uma vez: `sh tools/videos/preparar.sh` (pacotes e modelos de voz). A fala:
+
+   ```sh
+   python3 -I tools/videos/transcrever.py "VIDEO.mp4" --saida ANALISES --vocabulario-frase FRASE-PRIVADA.txt \
+       --correcoes tools/videos/correcoes.txt --correcoes CORRECOES-PRIVADAS.txt
+   ```
+
+   é o Whisper large-v3-turbo com o vocabulário e a fala anterior como contexto e as legendas cortadas por frase;
+   `--so-legendas` refaz as legendas em segundos depois de uma correção nova. `montar_saida_projeto.py` monta a pasta do
+   Drive: a legenda com o nome exato do vídeo, a transcrição, o roteiro, as folhas, os quadros e a fala no fim do relatório.
+3. **O modelo pelo conector**: só o que o vídeo mostra de novo, e só leitura.
+4. **Um relatório por vídeo**: passo a passo, como ele projeta, queixas, *no nosso programa: como fazer o mesmo* e perguntas;
+   o índice ganha uma linha.
+5. **Um lote de mudanças por vídeo**, teste primeiro, rodando aqui só os testes do que mudou (`cargo test -p CRATE FILTRO`,
+   com `CARGO_INCREMENTAL=0` e um cargo por vez: a máquina tem dois núcleos). Um commit por passo e push logo: o GitHub roda
+   a verificação completa (formatação, catálogos, clippy e todos os testes, em Linux, Windows e macOS) e gera o instalador
+   Windows. O ciclo fecha com tudo verde.
+6. **Olhar o resultado** só onde mudou, com o arquivo do cliente fora do repositório.
+
 ## O que pedir nas gravações
 
 Vídeos de até ~5 minutos ou ~100 MB, exportados em 720p; uma etapa por vídeo; a câmera num canto que não cubra painéis; zoom
