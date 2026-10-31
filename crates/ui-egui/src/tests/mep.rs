@@ -724,20 +724,101 @@ pipe {"points": [[1000,1000],[3000,1000]], "type": "PVC 50"}"#);
 }
 
 #[test]
-fn flatten_turns_the_linked_architecture_into_lines_on_each_storey() {
+fn flatten_asks_where_each_storey_is_cut_and_keeps_the_model_for_the_3d_view() {
     let dir = tempfile::tempdir().unwrap();
     let ifc = dir.path().join("Arquitetura.ifc");
     let mut arq = Session::new();
     arq.execute("wall", &serde_json::json!({"points": [[0, 0], [6000, 0], [6000, 4000]]})).unwrap();
     arq.execute("save", &serde_json::json!({"path": ifc})).unwrap();
-    let mut h = app(&format!(r#"link {{"path": {:?}}}"#, ifc.to_string_lossy()));
+    // With nothing linked, it says so, and nothing opens.
+    let mut empty = app("");
+    press(&mut empty, "Plumbing");
+    press(&mut empty, "Flatten");
+    assert!(empty.state().cut_planes.is_none() && empty.state().status.error, "{}", empty.state().status.text);
+    let mut h = app(&format!(r#"link {{"path": {:?}, "in_plans": false}}"#, ifc.to_string_lossy()));
     press(&mut h, "Plumbing");
     press(&mut h, "Flatten");
+    {
+        // Each storey, cut at 60 % of its height and seen down to 15 % of it under its floor until it's said otherwise.
+        let d = h.state().cut_planes.as_ref().expect("Cut Planes is open");
+        let rows: Vec<(&str, &str, &str)> = d.rows.iter().map(|r| (r.name.as_str(), r.cut.as_str(), r.bottom.as_str())).collect();
+        assert_eq!(rows, [("Level 1", "1,8", "-0,45"), ("Level 2", "1,8", "-0,45")], "storeys 3 m high");
+    }
+    // A cut that isn't a height is said inside the dialog, which stays.
+    h.state_mut().cut_planes.as_mut().unwrap().rows[0].cut = "high".into();
+    h.run();
+    press(&mut h, "OK");
+    assert!(h.state().cut_planes.as_ref().is_some_and(|d| d.error.is_some()));
+    {
+        let d = h.state_mut().cut_planes.as_mut().unwrap();
+        d.rows[0].cut = "1,5".into();
+        d.rows[1].on = false;
+    }
+    h.run();
+    press(&mut h, "OK");
+    assert!(h.state().cut_planes.is_none(), "{:?}", h.state().cut_planes);
     let m = &h.state().session.model;
-    assert!(m.elements.values().any(|e| matches!(e, Element::CadImport(_))), "{}", h.state().status.text);
-    assert!(!m.elements.values().any(|e| matches!(e, Element::Link(_))));
-    assert!(h.state().status.text.starts_with("Flattened"), "{}", h.state().status.text);
-    // With no link, it says so.
-    press(&mut h, "Flatten");
+    let imports = m.elements.values().filter(|e| matches!(e, Element::CadImport(_))).count();
+    assert_eq!(imports, 1, "the storey ticked, alone");
+    let link = m.elements.values().find_map(|e| match e {
+        Element::Link(l) => Some(l.in_plans),
+        _ => None,
+    });
+    assert_eq!(link, Some(false), "the model stays, for the 3D view, out of the plans");
+    assert_eq!(h.state().status.text, "Flattened: 1 storeys drawn in lines.");
+}
+
+#[test]
+fn erase_from_base_takes_an_object_of_the_flattened_base_away_whole() {
+    let dir = tempfile::tempdir().unwrap();
+    let ifc = dir.path().join("Arquitetura.ifc");
+    let mut arq = Session::new();
+    arq.execute("wall", &serde_json::json!({"points": [[0, 0], [6000, 0], [6000, 4000], [0, 4000]], "closed": true})).unwrap();
+    arq.execute("component", &serde_json::json!({"family": "Sofa", "at": [3000, 2000]})).unwrap();
+    arq.execute("save", &serde_json::json!({"path": ifc})).unwrap();
+    let mut h = app(&format!(
+        r#"link {{"path": {:?}}}
+flatten_link {{"levels": ["Level 1"]}}"#,
+        ifc.to_string_lossy()
+    ));
+    let lines = |h: &Harness<BimApp>| {
+        let m = &h.state().session.model;
+        m.elements
+            .values()
+            .filter_map(|e| match e {
+                Element::CadImport(ci) => Some(m.cads[&ci.cad].dxf().entities.iter().filter(|x| m.cads[&ci.cad].shows(x, ci)).count()),
+                _ => None,
+            })
+            .sum::<usize>()
+    };
+    let before = lines(&h);
+    press(&mut h, "Plumbing");
+    press(&mut h, "Erase from Base");
+    assert_eq!(h.state().tool, Tool::EraseBase);
+    // Nothing there: said so; then the sofa, with all it draws, goes.
+    click(&mut h, P2(1000.0, 3000.0));
     assert!(h.state().status.error, "{}", h.state().status.text);
+    let sofa = h
+        .state()
+        .session
+        .model
+        .elements
+        .values()
+        .find_map(|e| match e {
+            Element::CadImport(ci) => {
+                let m = &h.state().session.model;
+                let corner =
+                    |x: &bimcraft_core::dxf::Entity| bimcraft_core::cad::paths(&x.shape).first().and_then(|(pts, _)| pts.first().copied());
+                m.cads[&ci.cad].dxf().entities.iter().filter(|x| x.layer == "furniture").find_map(corner)
+            }
+            _ => None,
+        })
+        .expect("the sofa is in the base");
+    click(&mut h, sofa);
+    let after = lines(&h);
+    assert!(after < before && after > 0, "{before} lines, then {after}: {}", h.state().status.text);
+    assert!(h.state().status.text.starts_with("Erased from the base"), "{}", h.state().status.text);
+    assert_eq!(h.state().tool, Tool::EraseBase, "it goes on until Esc");
+    h.state_mut().run("undo", serde_json::json!({}));
+    assert_eq!(lines(&h), before, "undo brings it back");
 }

@@ -289,14 +289,22 @@ impl BimApp {
                 msg!("Set Origin: click the point every discipline's project shares, as a corner of the building; it becomes 0, 0"),
                 Tool::Origin,
             );
-            self.buttons(ui, &[scale, origin]);
             let tip = msg!(
-                "Flatten: the architect's linked model cut at each storey and kept as grey 2D lines of the project's own, to draw over; \
-                 the link goes, its file stays"
+                "Flatten: the architect's linked model cut at each storey where Cut Planes says, and kept as grey 2D lines of the \
+                 project's own, to draw over; the model stays for the 3D view"
             );
             if big_button(ui, Icon::Plan, msg!("Flatten"), false, tip).clicked() {
-                self.flatten();
+                self.open_cut_planes();
             }
+            let erase = (
+                Icon::Delete,
+                msg!("Erase from Base"),
+                msg!(
+                    "Erase from Base: click an object of the flattened base (a sofa, a rug, a piano) to take it away whole; Ctrl+Z brings it back"
+                ),
+                Tool::EraseBase,
+            );
+            self.buttons(ui, &[scale, origin, erase]);
         });
         panel(ui, msg!("Pipe Network"), |ui| {
             let tip = msg!(
@@ -312,13 +320,6 @@ impl BimApp {
                 self.export_material_list(&ctx);
             }
         });
-    }
-
-    /// Flatten: `flatten_link`, one undo step, how many storeys it drew said in the status box.
-    pub(crate) fn flatten(&mut self) {
-        let Some(r) = self.run("flatten_link", serde_json::json!({})) else { return };
-        let storeys = r["drawings"].as_array().map_or(0, Vec::len).to_string();
-        self.status = crate::Status { text: crate::lang::tf("Flattened: {} storeys drawn in lines.", &[&storeys]), error: false };
     }
 
     /// Generate Fittings: `pipe_fittings`, one undo step, its result said in the status box.

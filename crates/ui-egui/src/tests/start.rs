@@ -177,7 +177,7 @@ fn create_project_s_folder_comes_from_the_system_s_dialog() {
 }
 
 #[test]
-fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
+fn create_project_keeps_its_own_storeys_whatever_the_architect_s_ifc_has_and_links_it_for_the_3d_view() {
     let dir = tempfile::tempdir().unwrap();
     let ifc = dir.path().join("Arquitetura.ifc");
     let mut arq = Session::new();
@@ -186,6 +186,12 @@ fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
     arq.execute("save", &json!({"path": ifc})).unwrap();
     let mut h = home(dir.path(), &[]);
     press(&mut h, "Create Project…");
+    {
+        // A house of one storey: the ground floor 2,80 m high and the roof level over it.
+        let f = h.state().create_project.as_ref().unwrap();
+        let storeys: Vec<(&str, &str)> = f.storeys.iter().map(|s| (s.name.as_str(), s.height.as_str())).collect();
+        assert_eq!((storeys.as_slice(), f.top.as_str()), ([("Ground Floor", "2,80")].as_slice(), "Roof Level"));
+    }
     press(&mut h, "Choose IFC…");
     let tx = crate::dialog::BEGUN.with(|b| b.borrow_mut().pop()).expect("a dialog was begun");
     tx.send(Some(vec![ifc.clone()])).unwrap();
@@ -194,14 +200,15 @@ fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
         let f = h.state().create_project.as_ref().unwrap();
         assert_eq!(f.error, None);
         assert_eq!(f.name, "Arquitetura", "named after the file while none is typed");
-        let storeys: Vec<(&str, &str)> = f.storeys.iter().map(|s| (s.name.as_str(), s.height.as_str())).collect();
-        assert_eq!(storeys, [("Térreo", "3,06"), ("Superior", "2,88")]);
-        assert_eq!(f.top, "Cobertura");
+        assert_eq!(f.storeys.len(), 1, "the storeys are the designer's, not the architect's");
     }
     h.state_mut().create_project.as_mut().unwrap().folder = Some(dir.path().to_path_buf());
     h.run();
     press(&mut h, "Create");
     let m = &h.state().session.model;
+    let mut levels: Vec<(String, f64)> = m.levels().into_iter().map(|(_, l)| (l.name.clone(), l.elevation)).collect();
+    levels.sort_by(|a, b| a.1.total_cmp(&b.1));
+    assert_eq!(levels, vec![("Ground Floor".into(), 0.0), ("Roof Level".into(), 2800.0)]);
     let links: Vec<&bimcraft_core::model::Link> = m
         .elements
         .values()
@@ -212,11 +219,19 @@ fn create_project_follows_the_levels_of_the_architect_s_ifc_and_links_it() {
         .collect();
     assert_eq!(links.len(), 1, "the architecture is linked");
     assert_eq!(links[0].path, "Arquitetura.ifc", "beside the project, so the folder can move");
+    assert!(!links[0].in_plans, "in the 3D view, out of the plans until they are flattened");
     assert!(!m.loaded.is_empty(), "and read");
     assert!(!h.state().dirty(), "saved with its link");
-    // Its levels are the project's: nothing comes in as a level of its own.
-    let names: Vec<String> = bimcraft_core::link::seen(m).levels().into_iter().map(|(_, l)| l.name.clone()).collect();
-    assert!(names.iter().all(|n| !n.contains(':')), "{names:?}");
+    // Its plans draw nothing of it: the plan of the ground floor is as an empty project's.
+    let seen = bimcraft_core::link::seen(m);
+    let ink = |m: &bimcraft_core::model::Model| {
+        let ground = m.levels().into_iter().find(|(_, l)| l.elevation == 0.0).map(|(id, _)| id).unwrap();
+        bimcraft_core::render::plan(m, ground, 400, 300).prims.len()
+    };
+    let mut empty = Session::new();
+    empty.execute("new", &json!({"heights": [2800], "names": ["Ground Floor", "Roof Level"]})).unwrap();
+    assert!(seen.elements.len() > m.elements.len(), "the 3D view has the walls");
+    assert_eq!(ink(&seen), ink(&empty.model), "the plan hasn't");
 }
 
 #[test]

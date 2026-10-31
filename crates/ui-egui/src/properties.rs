@@ -366,6 +366,7 @@ fn rows(category: &str) -> &'static [Row] {
             ("Identity Data", "loaded", msg!("Loaded"), Shown),
             ("Other", "at", "Origin", Point),
             ("Other", "angle", "Angle", Number),
+            ("Graphics", "in_plans", msg!("Drawn in Plans"), Flag),
         ],
         _ => &[],
     }

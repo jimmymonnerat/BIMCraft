@@ -224,3 +224,18 @@ fn scale_by_reference_scales_the_base_by_two_points_and_the_distance_typed() {
     assert!(h.state().scale_dialog.as_ref().is_some_and(|d| d.error.is_some()));
     assert!((import(&h, id).scale - 1000.0).abs() < 1e-6);
 }
+
+#[test]
+fn the_pipe_tool_snaps_to_the_base_drawn_under_it() {
+    // The room's south-east corner is at (10000, 0) once the drawing is placed with its origin at the project's.
+    let path = drawing("pipe-snap", "base.dxf");
+    let mut h = app(&format!(r#"import_cad {{"path": {:?}, "position": "origin"}}"#, path.to_string_lossy()));
+    press(&mut h, "Plumbing");
+    press(&mut h, "Pipe");
+    // A click a little off the corner starts the pipe on it, the next one ends it on the east wall's middle.
+    click(&mut h, P2(10_060.0, 40.0));
+    click(&mut h, P2(10_040.0, 3_050.0));
+    let m = &h.state().session.model;
+    let pipe = m.elements.values().find_map(|e| e.run().filter(|_| e.category() == "pipe").cloned()).expect("a pipe");
+    assert_eq!((pipe.start, pipe.end), (P2(10_000.0, 0.0), P2(10_000.0, 3_000.0)));
+}

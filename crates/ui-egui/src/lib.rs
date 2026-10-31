@@ -190,6 +190,8 @@ pub enum Tool {
     ScaleRef(Option<P2>),
     /// Set Origin: one click on the base, the point every discipline shares.
     Origin,
+    /// Erase from Base: each click takes the object of the flattened base under it away whole, a sofa or a rug.
+    EraseBase,
     /// Tag the door or window clicked.
     Tag,
     /// A section: its start, once clicked.
@@ -670,6 +672,8 @@ pub struct BimApp {
     create_project: Option<newproject::CreateProject>,
     /// Scale by Reference's distance, once its two points are clicked.
     scale_dialog: Option<base::ScaleDialog>,
+    /// Flatten's Cut Planes, while open.
+    cut_planes: Option<base::CutPlanes>,
     /// Manage > Select by ID and IDs of Selection, while open.
     select_by_id: Option<inquiry::SelectById>,
     ids_of_selection: Option<inquiry::IdsOfSelection>,
@@ -1103,6 +1107,7 @@ impl BimApp {
             purge_dialog: None,
             create_project: None,
             scale_dialog: None,
+            cut_planes: None,
             select_by_id: None,
             ids_of_selection: None,
             selection_filter: None,
@@ -1199,6 +1204,7 @@ impl BimApp {
             Tool::Measure(_) => Some("Measure"),
             Tool::ScaleRef(_) => Some(msg!("Scale by Reference")),
             Tool::Origin => Some(msg!("Set Origin")),
+            Tool::EraseBase => Some(msg!("Erase from Base")),
             Tool::Tag => Some("Tag"),
             Tool::Section(_) => Some("Section"),
             Tool::Elevation => Some("Elevation"),
@@ -4203,6 +4209,7 @@ impl BimApp {
             Tool::ScaleRef(None) => msg!("Click a point of the base whose distance to another you know, as one face of a wall."),
             Tool::ScaleRef(Some(_)) => msg!("Click the other point: then type how far apart they are. Esc cancels."),
             Tool::Origin => msg!("Click the point every discipline shares, as a corner of the building: it becomes 0, 0."),
+            Tool::EraseBase => msg!("Click an object of the base to erase it whole, a sofa or a rug. Ctrl+Z brings it back; Esc ends."),
             Tool::Tag => msg!("Click an element to tag it with its type, a door's or window's with its mark, or with the field in Label."),
             Tool::Angular(refs) if refs.len() < 2 => msg!("Pick a wall, a grid or another line; then one that meets it."),
             Tool::Angular(_) => msg!("Click where the arc goes: the angle on that side. Esc cancels."),
@@ -4481,6 +4488,7 @@ impl BimApp {
     fn dialogs(&mut self, ctx: &Context) {
         self.create_project_window(ctx);
         self.scale_window(ctx);
+        self.cut_planes_window(ctx);
         self.type_properties(ctx);
         self.family_type_properties(ctx);
         self.materials_window(ctx);

@@ -1662,6 +1662,8 @@ impl BimApp {
                     self.fit();
                 }
             }
+            // Erase from Base: the object of the base under the click, within a few pixels, goes whole.
+            Tool::EraseBase => self.erase_from_base(level, v.mm(at), 8.0 / v.scale),
             // Scale by Reference: two points on the base, then the distance they are.
             &Tool::ScaleRef(first) => {
                 let p = self.snap_point(m, level, v, at, first.as_slice(), mods.shift);
