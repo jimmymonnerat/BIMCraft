@@ -114,6 +114,8 @@ impl Category {
             // IFC2x3 has no sanitary terminal of its own: a basin or a WC is a flow terminal there, as Revit and ArchiCAD export it.
             // Revit writes a maker's fixture family (a Deca basin, a tap) as a plain distribution element.
             Category::Plumbing => &["IFCFLOWTERMINAL", "IFCDISTRIBUTIONELEMENT"],
+            // A gutter (a pipe segment of that predefined type, as Revit writes one) is read as it is drawn, not as a pipe.
+            Category::Generic => &["IFCPIPESEGMENT"],
             _ => &[],
         }
     }
@@ -320,7 +322,9 @@ pub enum Val {
 }
 
 /// A form's solid in the family's own axes: its triangles, its caps' first; its outline seen from
-/// above, from its bottom to its top, what it's made of; a round one's sides read as one surface.
+/// above, from its bottom to its top, what it's made of; a round one's sides read as one surface. One a file brought as
+/// triangles (`mesh`) is drawn in plan as it is seen from above ([`crate::topview`]), not by its outline, which is the hull
+/// round it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Piece {
     pub tris: Vec<[P3; 3]>,
@@ -330,6 +334,7 @@ pub struct Piece {
     pub top: f64,
     pub material: String,
     pub round: bool,
+    pub mesh: bool,
 }
 
 /// How deep a formula may nest.
@@ -1041,7 +1046,7 @@ impl Family {
                         let axis = [corner(p).map_err(said)?, corner(q).map_err(said)?];
                         let (tris, outline) = revolve(&ring, axis, (from, to), form.plane).map_err(said)?;
                         let (bottom, top) = heights(&tris);
-                        Piece { caps: tris.len(), tris, outline, bottom, top, material, round: false }
+                        Piece { caps: tris.len(), tris, outline, bottom, top, material, round: false, mesh: false }
                     }
                     None => {
                         let (tris, caps) = sweep(&ring, from, to, form.plane).map_err(said)?;
@@ -1056,7 +1061,7 @@ impl Family {
                             Plane::Xz => (vec![P2(a0, from), P2(a1, from), P2(a1, to), P2(a0, to)], b0, b1),
                             Plane::Yz => (vec![P2(from, a0), P2(to, a0), P2(to, a1), P2(from, a1)], b0, b1),
                         };
-                        Piece { tris, caps, outline, bottom, top, material, round: form.circle.is_some() }
+                        Piece { tris, caps, outline, bottom, top, material, round: form.circle.is_some(), mesh: false }
                     }
                 }
             };
@@ -1081,6 +1086,7 @@ impl Family {
                         round: false,
                         outline: std::mem::take(&mut piece.outline),
                         material: std::mem::take(&mut piece.material),
+                        mesh: piece.mesh,
                     };
                 }
             }
@@ -1245,9 +1251,10 @@ fn mesh(tris: &[[P3; 3]], material: String) -> Result<Piece, String> {
         return Err("a corner of it isn't a usable number".into());
     }
     let (bottom, top) = tris.iter().flatten().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p[2]), hi.max(p[2])));
-    // ponytail: the convex hull stands for its outline; trace its silhouette if hulls mislead.
+    // The convex hull stands for its outline where an outline is wanted (what a plan fits to, what hides what's under it);
+    // a plan draws its edges as seen from above.
     let outline = crate::geom::hull(tris.iter().flatten().map(|p| P2(p[0], p[1])).collect());
-    Ok(Piece { tris: tris.to_vec(), caps: tris.len(), outline, bottom, top, material, round: false })
+    Ok(Piece { tris: tris.to_vec(), caps: tris.len(), outline, bottom, top, material, round: false, mesh: true })
 }
 
 /// The families a new project starts with, BIMCraft's own: tables, chairs, beds, sofas, desks,

@@ -175,11 +175,9 @@ fn flattening_the_architect_s_model_makes_a_drawing_of_lines_for_each_storey_and
     run(&mut s, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
     run(&mut s, "link", json!({"path": ifc}));
     let r = run(&mut s, "flatten_link", json!({}));
-    assert_eq!(
-        drawings(&s),
-        vec![("Superior".to_string(), "Arquitetura - Superior".to_string()), ("Térreo".to_string(), "Arquitetura - Térreo".to_string())],
-        "{r}"
-    );
+    // The roof's storey too: it sees the walls under it, down to 15 % of its height under its level.
+    let storey = |l: &str| (l.to_string(), format!("Arquitetura - {l}"));
+    assert_eq!(drawings(&s), vec![storey("Cobertura"), storey("Superior"), storey("Térreo")], "{r}");
     assert!(!s.model.elements.values().any(|e| matches!(e, Element::Link(_))), "the link goes: its lines stand for it");
     assert_eq!(s.model.check(), Ok(()));
     // The ground floor's lines are the walls' faces where the plan cuts them, in millimetres where the walls are.
@@ -188,9 +186,10 @@ fn flattening_the_architect_s_model_makes_a_drawing_of_lines_for_each_storey_and
         .dxf()
         .entities
         .iter()
-        .filter_map(|e| match e.shape {
-            crate::dxf::Shape::Line(a, b) => Some((a, b)),
-            _ => None,
+        .flat_map(|e| crate::cad::paths(&e.shape))
+        .flat_map(|(pts, closed)| {
+            let close = closed.then(|| pts.last().copied().zip(pts.first().copied())).flatten();
+            pts.windows(2).map(|w| (w[0], w[1])).chain(close).collect::<Vec<_>>()
         })
         .collect();
     assert!(lines.len() >= 8, "{} lines", lines.len());
@@ -256,7 +255,7 @@ fn an_ifc2x3_flow_terminal_comes_in_as_a_plumbing_fixture_and_is_flattened() {
     let r = run(&mut s, "flatten_link", json!({"levels": ["Nível 1"]}));
     assert!(r["drawings"][0]["lines"].as_u64().unwrap() > 0, "{r}");
     let cad = &s.model.cads["Arquitetura - Nível 1"];
-    assert!(cad.dxf().entities.iter().any(|e| e.layer == "component"), "the WC is drawn");
+    assert!(cad.dxf().entities.iter().any(|e| e.layer == "plumbing"), "the WC is drawn, on the plumbing fixtures' layer");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -277,6 +276,128 @@ fn a_distribution_element_as_revit_writes_a_maker_s_fixture_comes_in_and_is_flat
     run(&mut s, "new", json!({"language": "pt"}));
     run(&mut s, "link", json!({"path": ifc}));
     run(&mut s, "flatten_link", json!({"levels": ["Nível 1"]}));
-    assert!(s.model.cads["Arquitetura - Nível 1"].dxf().entities.iter().any(|e| e.layer == "component"), "the basin is drawn");
+    assert!(s.model.cads["Arquitetura - Nível 1"].dxf().entities.iter().any(|e| e.layer == "plumbing"), "the basin is drawn");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// An architect's model of two storeys with a room on the ground floor and two boxes in it: one sunk 400 mm under the
+/// floor (a box in the ground), one hung 2000 mm over it (a cabinet on the wall).
+fn boxes(test: &str) -> std::path::PathBuf {
+    let ifc = folder(test).join("Arquitetura.ifc");
+    let mut arq = Session::new();
+    run(&mut arq, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
+    run(&mut arq, "wall", json!({"points": [[0, 0], [6000, 0], [6000, 4000], [0, 4000]], "closed": true}));
+    let square = json!([[0, 0], [600, 0], [600, 600], [0, 600]]);
+    run(&mut arq, "family", json!({"name": "Caixa", "types": {"Caixa": {}}, "forms": [{"profile": square, "to": 300}]}));
+    run(&mut arq, "component", json!({"family": "Caixa", "at": [1000, 1000], "offset": -400}));
+    run(&mut arq, "component", json!({"family": "Caixa", "at": [3000, 1000], "offset": 2000}));
+    run(&mut arq, "save", json!({"path": ifc}));
+    ifc
+}
+
+/// A project of the same storeys linking `ifc`.
+fn linking(ifc: &std::path::Path) -> Session {
+    let mut s = Session::new();
+    run(&mut s, "new", json!({"language": "pt", "heights": [3000, 3000], "names": ["Térreo", "Superior", "Cobertura"]}));
+    run(&mut s, "link", json!({"path": ifc}));
+    s
+}
+
+/// Whether drawing `cad` shows a line with a point inside the box from `lo` to `hi`, of what its import on the ground floor
+/// shows.
+fn drawn_in(s: &Session, cad: &str, lo: (f64, f64), hi: (f64, f64)) -> bool {
+    let shows = s.model.elements.values().find_map(|e| match e {
+        Element::CadImport(ci) if ci.cad == cad => Some(ci.clone()),
+        _ => None,
+    });
+    let Some(ci) = shows else { return false };
+    s.model.cads[cad]
+        .dxf()
+        .entities
+        .iter()
+        .filter(|e| s.model.cads[cad].shows(e, &ci))
+        .flat_map(|e| crate::cad::paths(&e.shape))
+        .flat_map(|(pts, _)| pts)
+        .any(|p| p.0 > lo.0 && p.0 < hi.0 && p.1 > lo.1 && p.1 < hi.1)
+}
+
+#[test]
+fn each_storey_is_cut_where_it_is_asked_and_seen_down_to_where_it_is_asked() {
+    let ifc = boxes("cut");
+    let mut s = linking(&ifc);
+    let (sunk, hung) = (((900.0, 900.0), (1700.0, 1700.0)), ((2900.0, 900.0), (3700.0, 1700.0)));
+    // As a storey 3 m high is cut unless it's said: at 60 % of its height, seen down to 15 % of it under its floor.
+    let r = run(&mut s, "flatten_link", json!({"levels": ["Térreo"], "keep_link": true}));
+    let d = &r["drawings"][0];
+    assert_eq!((d["cut"].as_f64(), d["bottom"].as_f64()), (Some(1800.0), Some(-450.0)), "{r}");
+    let cad = "Arquitetura - Térreo";
+    assert!(drawn_in(&s, cad, sunk.0, sunk.1), "the box in the ground is seen");
+    assert!(!drawn_in(&s, cad, hung.0, hung.1), "the cabinet is over the cut");
+    // Cut higher and seen down to the floor alone: the other way round.
+    run(&mut s, "flatten_link", json!({"levels": [{"level": "Térreo", "cut": 2200, "bottom": 0}], "keep_link": true}));
+    assert!(!drawn_in(&s, cad, sunk.0, sunk.1));
+    assert!(drawn_in(&s, cad, hung.0, hung.1));
+    // One cut for every storey, said once.
+    let r = run(&mut s, "flatten_link", json!({"cut": 1500, "bottom": -300, "keep_link": true}));
+    let all = r["drawings"].as_array().unwrap();
+    assert!(!all.is_empty() && all.iter().all(|d| d["cut"] == 1500.0 && d["bottom"] == -300.0), "{r}");
+    // A bottom over the cut, a height that isn't one, or a word it doesn't know, is refused.
+    fails(&mut s, "flatten_link", json!({"cut": 1000, "bottom": 1200}));
+    fails(&mut s, "flatten_link", json!({"levels": [{"level": "Térreo", "cut": "high"}]}));
+    fails(&mut s, "flatten_link", json!({"levels": [{"level": "Térreo", "under": 3}]}));
+    let _ = std::fs::remove_dir_all(folder("cut"));
+}
+
+#[test]
+fn a_flattened_storey_draws_each_element_as_an_object_of_its_own_and_the_link_stays_for_the_3d_view() {
+    let ifc = boxes("objects");
+    let mut s = linking(&ifc);
+    run(&mut s, "flatten_link", json!({"levels": ["Térreo"], "keep_link": true}));
+    // The link stays, for the 3D view and sections; plans draw its lines now, not it.
+    let link = s.model.elements.values().find_map(|e| match e {
+        Element::Link(l) => Some(l.clone()),
+        _ => None,
+    });
+    assert_eq!(link.map(|l| l.in_plans), Some(false));
+    let cad = "Arquitetura - Térreo";
+    let objects: std::collections::BTreeSet<String> = s.model.cads[cad].dxf().entities.iter().map(|e| e.object.clone()).collect();
+    assert_eq!(objects.len(), 5, "four walls and the box in the ground, each its own: {objects:?}");
+    let layers: std::collections::BTreeSet<String> = s.model.cads[cad].dxf().entities.iter().map(|e| e.layer.clone()).collect();
+    assert_eq!(layers, ["furniture".to_string(), "wall".to_string()].into(), "a layer for what each is");
+    // An object erased stays erased when the storey is flattened again, as when the architect's model changes.
+    let import = |s: &Session| {
+        s.model.elements.iter().find(|(_, e)| matches!(e, Element::CadImport(ci) if ci.cad == cad)).map(|(id, _)| *id).unwrap()
+    };
+    let id = import(&s);
+    let r = run(&mut s, "cad_erase", json!({"id": id, "at": [1300, 1005]}));
+    assert_eq!(r["layer"], "furniture", "{r}");
+    assert!(!drawn_in(&s, cad, (900.0, 900.0), (1700.0, 1700.0)), "the box is erased");
+    run(&mut s, "flatten_link", json!({"levels": ["Térreo"], "keep_link": true}));
+    assert!(!drawn_in(&s, cad, (900.0, 900.0), (1700.0, 1700.0)), "and stays erased");
+    assert!(drawn_in(&s, cad, (-500.0, -500.0), (6500.0, 500.0)), "the rest is drawn");
+    let _ = std::fs::remove_dir_all(folder("objects"));
+}
+
+#[test]
+fn a_gutter_comes_in_as_it_is_drawn_and_not_as_a_straight_pipe() {
+    // Revit writes a gutter as a pipe segment whose type is a gutter: its body, a trough, is no straight run.
+    let dir = folder("gutter");
+    let ifc4 = dir.join("four.ifc");
+    let mut arq = Session::new();
+    run(&mut arq, "pipe", json!({"points": [[0, 0], [4000, 0]], "type": "PVC 50"}));
+    run(&mut arq, "save", json!({"path": ifc4}));
+    let text = std::fs::read_to_string(&ifc4).unwrap();
+    assert!(text.contains(".RIGIDSEGMENT."), "a pipe segment");
+    let ifc = dir.join("Arquitetura.ifc");
+    std::fs::write(&ifc, text.replace(".RIGIDSEGMENT.", ".GUTTER.")).unwrap();
+    let mut s = Session::new();
+    run(&mut s, "link", json!({"path": ifc}));
+    let seen = crate::link::seen(&s.model);
+    assert!(!seen.elements.values().any(|e| e.category() == "pipe"), "not a pipe");
+    let generic = seen.elements.values().any(|e| match e {
+        Element::Component(c) => seen.families.get(&c.family).is_some_and(|f| f.category == crate::family::Category::Generic),
+        _ => false,
+    });
+    assert!(generic, "a component of its own shape");
     let _ = std::fs::remove_dir_all(&dir);
 }

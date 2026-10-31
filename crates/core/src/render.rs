@@ -1508,7 +1508,7 @@ fn cad_imports(d: &mut Drawing, m: &Model, key: crate::ids::Guid, level: crate::
         let in_view = look.hidden_layers(&ci.cad);
         d.own(Some(id));
         for ent in &cad.dxf().entities {
-            if !cad.shows(ent, &ci.hidden) || in_view.is_some_and(|l| l.contains(&ent.layer)) || !seen(ent.shape.bounds()) {
+            if !cad.shows(ent, ci) || in_view.is_some_and(|l| l.contains(&ent.layer)) || !seen(ent.shape.bounds()) {
                 continue;
             }
             let color = cad.color(ent, ci.colors).unwrap_or(INK);
@@ -1923,8 +1923,8 @@ fn draw_plan(m: &Model, plan: impl Key, view: View, up: bool, k: f32, n: f64, ti
     d
 }
 
-/// A component seen from above: each of its forms' outlines, but where a higher form covers it (a
-/// table's top over its legs).
+/// A component seen from above: each of its forms' outlines, or for a form a file brought as triangles its edges as seen
+/// from above ([`crate::topview`]), but where a higher form covers them (a table's top over its legs).
 fn component(d: &mut Drawing, m: &Model, pieces: &[crate::family::Piece]) {
     if pattern_style(d, false).is_some() {
         for p in pieces {
@@ -1934,7 +1934,11 @@ fn component(d: &mut Drawing, m: &Model, pieces: &[crate::family::Piece]) {
         }
     }
     for (i, p) in pieces.iter().enumerate() {
-        for (a, b) in geom::ring_edges(&p.outline) {
+        let edges: Vec<(P2, P2)> = match p.mesh {
+            true => crate::topview::seen(&p.tris).iter().map(|[a, b]| (*a, *b)).collect(),
+            false => geom::ring_edges(&p.outline).collect(),
+        };
+        for (a, b) in edges {
             let len = a.dist(b);
             if len < 1e-9 {
                 continue;

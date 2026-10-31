@@ -785,7 +785,12 @@ impl Look {
     /// What view `view` looks like: nothing hidden or painted when it isn't a view, or has no graphics.
     pub fn of(m: &Model, view: impl Key) -> Look {
         let look = graphics_of(m, view).map_or_else(Look::default, |own| Look::with(m, own));
-        Look { section: m.section_box(view), ..look }
+        let mut look = Look { section: m.section_box(view), ..look };
+        // A link kept out of plans: its elements are the 3D view's and the sections', not a plan's.
+        if !m.out_of_plans.is_empty() && matches!(m.elements.get(view), Some(Element::Level(_) | Element::PlanView(_))) {
+            look.hidden.extend(m.out_of_plans.iter().copied());
+        }
+        look
     }
 
     /// The section box the view is cut to, its min and max corners: none unless it's a 3D view with one turned on.

@@ -3,7 +3,6 @@
 //! build does, and the drawing [`crate::dxf`] reads of it. A `CadImport` element places one on a level, in every plan of it or
 //! in one view only. A linked one remembers its file, and `reload_cad` (and opening the project) reads it again.
 
-use std::collections::BTreeSet;
 use std::sync::{Arc, OnceLock};
 
 use serde::{Deserialize, Serialize};
@@ -188,9 +187,9 @@ impl Cad {
         Some([dash.unwrap_or(gap / 4.0) * k, gap * k])
     }
 
-    /// Whether an entity is drawn when the layers `hidden` are.
-    pub fn shows(&self, e: &Entity, hidden: &BTreeSet<String>) -> bool {
-        !hidden.contains(&e.layer)
+    /// Whether import `ci` draws entity `e`: its layer not hidden, its object not erased.
+    pub fn shows(&self, e: &Entity, ci: &crate::model::CadImport) -> bool {
+        !ci.hidden.contains(&e.layer) && !ci.erased.contains(&e.object)
     }
 }
 
@@ -247,7 +246,7 @@ pub fn nearest<'c>(cad: &'c Cad, ci: &crate::model::CadImport, at: P2, reach: f6
     cad.dxf()
         .entities
         .iter()
-        .filter(|e| cad.shows(e, &ci.hidden))
+        .filter(|e| cad.shows(e, ci))
         .filter(|e| {
             let [lo, hi] = e.shape.bounds();
             q.0 >= lo.0 - reach && q.0 <= hi.0 + reach && q.1 >= lo.1 - reach && q.1 <= hi.1 + reach

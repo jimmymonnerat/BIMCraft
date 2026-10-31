@@ -54,13 +54,24 @@ fn built(e: &Element) -> bool {
 }
 
 /// The model the views draw: `m`, with what each of its loaded links builds. The model itself where it links nothing.
-/// A link that can't be brought in is left out.
+/// A link that can't be brought in is left out. What a link kept out of plans builds is listed in `out_of_plans`, which
+/// plans leave out ([`crate::graphics::Look::of`]).
 pub fn seen(m: &Arc<Model>) -> Arc<Model> {
+    brought(m, |_| true)
+}
+
+/// [`seen`], but for the links kept out of plans (`in_plans: false`): what a plan of the project and its links draws.
+pub fn seen_in_plans(m: &Arc<Model>) -> Arc<Model> {
+    brought(m, |l| l.in_plans)
+}
+
+/// `m` with what each loaded link `take` takes builds.
+fn brought(m: &Arc<Model>, take: impl Fn(&crate::model::Link) -> bool) -> Arc<Model> {
     let links: Vec<(&crate::model::Link, &Arc<Model>)> = m
         .elements
         .values()
         .filter_map(|e| match e {
-            Element::Link(l) => m.loaded.get(&l.path).map(|other| (l, other)),
+            Element::Link(l) if take(l) => m.loaded.get(&l.path).map(|other| (l, other)),
             _ => None,
         })
         .collect();
@@ -71,13 +82,19 @@ pub fn seen(m: &Arc<Model>) -> Arc<Model> {
     for (l, other) in links {
         // ponytail: a link that fails (a file whose parts clash with this project's) is drawn as not there; the status of
         // `reload` says which links are loaded.
-        let _ = bring(&mut out, l, other);
+        if let Ok(ids) = bring(&mut out, l, other)
+            && !l.in_plans
+        {
+            let built: Vec<Id> = ids.into_iter().filter(|id| !matches!(out.elements.get(*id), Some(Element::Level(_)))).collect();
+            out.out_of_plans.extend(built);
+        }
     }
     Arc::new(out)
 }
 
 /// What link `l` builds, in `to`: turned and moved as the link says, on `to`'s levels where they stand at the same height.
-fn bring(to: &mut Model, l: &crate::model::Link, from: &Model) -> Result<(), String> {
+/// The ids it has in `to`.
+fn bring(to: &mut Model, l: &crate::model::Link, from: &Model) -> Result<Vec<Id>, String> {
     let mut other = from.clone();
     other.elements.retain(|_, e| matches!(e, Element::Level(_)) || built(e));
     let all: BTreeSet<Id> = other.elements.keys().copied().collect();
@@ -107,9 +124,9 @@ fn bring(to: &mut Model, l: &crate::model::Link, from: &Model) -> Result<(), Str
     }
     let ask: Vec<Id> = all.difference(&matched).copied().collect();
     if ask.is_empty() {
-        return Ok(());
+        return Ok(Vec::new());
     }
-    crate::insert::insert_as(to, &other, &ask, true).map(|_| ())
+    crate::insert::insert_as(to, &other, &ask, true).map(|made| made.ids.into_values().collect())
 }
 
 #[cfg(test)]
@@ -231,6 +248,31 @@ mod tests {
         assert!(own.pick(at, 4.0).is_some());
         assert_eq!(linked.pick(at, 4.0), None);
         assert!(linked.in_box((0.0, 0.0), (800.0, 600.0), true).is_empty());
+    }
+
+    #[test]
+    fn a_link_kept_out_of_plans_is_drawn_in_3d_and_in_sections_alone() {
+        let path = architect("out-of-plans");
+        let mut s = Session::new();
+        let level = s.model.levels()[0].0;
+        let plan = |s: &mut Session| run(s, "render", json!({"view": level, "width": 200, "height": 150}))["pngBase64"].clone();
+        let empty = plan(&mut s);
+        run(&mut s, "link", json!({"path": path, "in_plans": false}));
+        assert_eq!(walls(&seen(&s.model)).len(), 4, "the 3D view and sections draw it");
+        assert!(walls(&seen_in_plans(&s.model)).is_empty(), "plans don't");
+        assert_eq!(plan(&mut s), empty, "its plan is as it was without it");
+        // Kept so in the file.
+        let file = std::env::temp_dir().join(format!("bimcraft-link-project-out-of-plans-{}.bimcraft", std::process::id()));
+        run(&mut s, "save", json!({"path": file}));
+        let mut again = Session::new();
+        run(&mut again, "open", json!({"path": file}));
+        let _ = std::fs::remove_file(&file);
+        assert!(walls(&seen_in_plans(&again.model)).is_empty() && walls(&seen(&again.model)).len() == 4);
+        // A link is drawn in plans unless it says not, with a yes or a no.
+        assert!(s.execute("link", &json!({"path": path, "in_plans": "no"})).is_err());
+        run(&mut s, "link", json!({"path": path, "name": "Too"}));
+        let _ = std::fs::remove_file(&path);
+        assert_eq!(walls(&seen_in_plans(&s.model)).len(), 4);
     }
 
     #[test]

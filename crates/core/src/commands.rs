@@ -93,12 +93,14 @@ pub static ALL: &[Command] = &[
         "link",
         "Link Model",
         &["LK"],
-        "{path, name?, at?: [x, y], angle?: degrees} another project (.bimcraft or .ifc) shown in this one as a reference that \
+        "{path, name?, at?: [x, y], angle?: degrees, in_plans?} another project (.bimcraft or .ifc) shown in this one as a reference that \
          can't be edited, as Revit's Link Revit: its walls, floors, roofs, columns, stairs and the rest of what it builds are \
          drawn in the plans, sections and 3D views, halftone, and snapped to; nothing of it is selected, scheduled, checked or \
          exported. It stands with its origin at `at` (default [0, 0]) turned `angle` about it; its levels stand at their own \
          elevations, on this project's levels at the same height. `path` is read now and again by `reload`, and kept as given: \
-         a relative one is relative to this project's file. `name` defaults to the file's. Returns `id`, `name`, `elements`",
+         a relative one is relative to this project's file. `name` defaults to the file's. `in_plans: false` keeps it out of the \
+         plans, drawn in the 3D view and sections alone, as an architect's model is until its plans are flattened \
+         (`flatten_link`). Returns `id`, `name`, `elements`",
         link_model,
     ),
     edit(
@@ -127,12 +129,18 @@ pub static ALL: &[Command] = &[
         "flatten_link",
         "Flatten Link",
         &[],
-        "{id?, levels?: [level, …], keep_link?} the architect's linked model cut at each storey as its plan cuts it, and its lines \
-         kept as a drawing of the project's own: a DXF in millimetres named `<link> - <level>`, its lines on a layer for each \
-         category (wall, door, window, component…), placed on that level as an imported drawing is, so the design is drawn over \
-         light 2D lines. `id` the link (the project's only one by default); `levels` by name or id (every level by default); a \
-         storey flattened again is drawn anew. The link goes unless `keep_link`: the file stays where it is, to link again. \
-         Returns `drawings` ({level, cad, lines, id}) and `link_removed`",
+        "{id?, levels?: [level | {level, cut?, bottom?}, …], cut?, bottom?, keep_link?} the architect's linked model cut at \
+         each storey and its lines kept as a drawing of the project's own: a DXF in millimetres named `<link> - <level>`, \
+         grey, its lines on a layer for what each element is (wall, door, window, furniture, plumbing…), each element one \
+         object of it (a block placed once, so `cad_erase` takes a sofa away whole), placed on that level as an imported \
+         drawing is, so the design is drawn over light 2D lines. `cut` is the height over each storey's level its plan is cut \
+         at and `bottom` how far down it sees (under its floor when below 0), mm, for every storey or for one in `levels`; \
+         unless they're said, 60 % of the storey's height and 15 % of it under its floor (1680 and -420 for a storey 2800 \
+         high; the top level's storey is as high as the one under it). `id` the link (the project's only one by default); \
+         `levels` by name or id (every level by default); a storey flattened again is drawn anew, keeping what was erased of \
+         it and its hidden layers. The link goes unless `keep_link`, which keeps it for the 3D view and sections and out of \
+         the plans: the file stays where it is, to link again. Returns `drawings` ({level, cad, lines, id, cut, bottom}) and \
+         `link_removed`",
         flatten_link,
     ),
     other(
@@ -211,6 +219,17 @@ pub static ALL: &[Command] = &[
         "{cad} reads a linked CAD drawing's file again, so every import of it shows what the file holds now (opening the project \
          does too). Returns whether it changed",
         reload_cad,
+    ),
+    edit(
+        "cad_erase",
+        "Erase from Drawing",
+        &[],
+        "{id, at?: [x, y], reach?, restore?} takes out of a CAD import the object of its drawing nearest `at` (within `reach` \
+         mm, 100 unless given) with all it draws: a block placed once, as each element of a flattened plan is (a sofa, a rug), \
+         or an entity of its own. The file is left as it is; the import keeps what it erased, which stays erased when the \
+         storey is flattened again. `restore` brings back all it erased. Returns the `object` (its handle, or `#n` where it \
+         stands in the file), its `layer` and how many `entities` went; or how many objects were `restored`",
+        cad_erase,
     ),
     other(
         "cad_query",
@@ -2608,6 +2627,11 @@ fn relink(s: &mut Session) -> Vec<Value> {
 fn link_model(s: &mut Session, p: &Value) -> R {
     let c = "link";
     let path = string(c, p, "path")?.ok_or_else(|| bad(c, "`path` is required"))?;
+    let in_plans = match p.get("in_plans") {
+        None | Some(Value::Null) => true,
+        Some(Value::Bool(b)) => *b,
+        Some(v) => return Err(bad(c, format!("`in_plans` is true or false, not {v}"))),
+    };
     let other = read_link(s, &path).map_err(|e| bad(c, e))?;
     let name = match string(c, p, "name")? {
         Some(n) => n,
@@ -2617,7 +2641,7 @@ fn link_model(s: &mut Session, p: &Value) -> R {
     let angle = num(c, p, "angle")?.unwrap_or(0.0);
     let elements = other.elements.len();
     let m = s.model_mut();
-    let id = m.insert(Element::Link(crate::model::Link { name: name.clone(), path: path.clone(), at, angle }));
+    let id = m.insert(Element::Link(crate::model::Link { name: name.clone(), path: path.clone(), at, angle, in_plans }));
     m.loaded.insert(path, other);
     Ok(json!({"id": id, "name": name, "elements": elements}))
 }
@@ -4829,7 +4853,18 @@ fn import_cad(s: &mut Session, p: &Value) -> R {
     if new {
         m.cads.insert(name.clone(), cad);
     }
-    let id = m.insert(Element::CadImport(CadImport { cad: name.clone(), level, at, origin, scale, angle, view, hidden, colors }));
+    let id = m.insert(Element::CadImport(CadImport {
+        cad: name.clone(),
+        level,
+        at,
+        origin,
+        scale,
+        angle,
+        view,
+        hidden,
+        colors,
+        erased: BTreeSet::new(),
+    }));
     let extents = m.cad_box(id);
     let mut reply = json!({
         "id": id, "cad": name, "source": source, "unit": unit, "scale": scale, "entities": entities, "layers": layers,
@@ -4961,6 +4996,35 @@ fn cad_query(s: &mut Session, p: &Value) -> R {
         "id": id, "found": true, "kind": crate::cad::kind(&e.shape), "layer": e.layer, "color": color,
         "linetype": linetype, "weight": e.weight, "distance": hundredth(d),
     }))
+}
+
+fn cad_erase(s: &mut Session, p: &Value) -> R {
+    let c = "cad_erase";
+    only(c, p, &["id", "at", "reach", "restore"])?;
+    let m = &s.model;
+    let (id, ci) = cad_import(c, m, p)?;
+    if flag(c, p, "restore")? {
+        let restored = ci.erased.len();
+        if let Some(Element::CadImport(ci)) = s.model_mut().elements.get_mut(id) {
+            ci.erased.clear();
+        }
+        return Ok(json!({"id": id, "restored": restored}));
+    }
+    let at = point_req(c, p, "at")?;
+    let reach = num(c, p, "reach")?.unwrap_or(100.0);
+    if !(reach > 0.0 && reach <= MAX_COORD) {
+        return Err(bad(c, format!("`reach` is how far from `at` to look, mm, above 0, not {reach}")));
+    }
+    let cad = m.cads.get(&ci.cad).ok_or_else(|| bad(c, format!("the project holds no CAD drawing named `{}`", ci.cad)))?;
+    let Some((e, _)) = crate::cad::nearest(cad, ci, at, reach) else {
+        return Err(bad(c, format!("nothing of the drawing is within {reach} mm of [{}, {}]", hundredth(at.0), hundredth(at.1))));
+    };
+    let (object, layer) = (e.object.clone(), e.layer.clone());
+    let entities = cad.dxf().entities.iter().filter(|x| x.object == object && cad.shows(x, ci)).count();
+    if let Some(Element::CadImport(ci)) = s.model_mut().elements.get_mut(id) {
+        ci.erased.insert(object.clone());
+    }
+    Ok(json!({"id": id, "object": object, "layer": layer, "entities": entities}))
 }
 
 fn grid(s: &mut Session, p: &Value) -> R {
@@ -10485,8 +10549,9 @@ fn set_origin(s: &mut Session, p: &Value) -> R {
 /// The linked model cut at each storey and kept as the project's own drawing of lines, one for each level.
 fn flatten_link(s: &mut Session, p: &Value) -> R {
     let c = "flatten_link";
-    only(c, p, &["id", "levels", "keep_link"])?;
+    only(c, p, &["id", "levels", "keep_link", "cut", "bottom"])?;
     let keep_link = flag(c, p, "keep_link")?;
+    let (cut_all, bottom_all) = (num(c, p, "cut")?, num(c, p, "bottom")?);
     let m = &s.model;
     let links: Vec<Id> = m.elements.iter().filter(|(_, e)| matches!(e, Element::Link(_))).map(|(id, _)| *id).collect();
     let link_id = match p.get("id") {
@@ -10504,31 +10569,71 @@ fn flatten_link(s: &mut Session, p: &Value) -> R {
     if !m.loaded.contains_key(&link.path) {
         return Err(bad(c, format!("{} isn't read: `reload` it, or link its file again", link.name)));
     }
-    // The levels to flatten: those named, or every one, lowest first.
+    // The levels, lowest first, and each storey's height: up to the level over it; the top one's, the one under it's.
     let mut all: Vec<(Id, String, f64)> = m.levels().into_iter().map(|(id, l)| (id, l.name.clone(), l.elevation)).collect();
     all.sort_by(|a, b| a.2.total_cmp(&b.2));
-    let levels: Vec<(Id, String)> = match p.get("levels") {
-        None | Some(Value::Null) => all.iter().map(|(id, n, _)| (*id, n.clone())).collect(),
+    let storey = |i: usize| {
+        let up = all.get(i + 1).and_then(|n| Some(n.2 - all.get(i)?.2));
+        let down = i.checked_sub(1).and_then(|j| Some(all.get(i)?.2 - all.get(j)?.2));
+        up.or(down).filter(|h| *h > 0.0).unwrap_or(3000.0)
+    };
+    // The storeys to flatten (those named, or every one), each with the cut and the bottom asked for it, if any.
+    let asked: Vec<(usize, Option<f64>, Option<f64>)> = match p.get("levels") {
+        None | Some(Value::Null) => (0..all.len()).map(|i| (i, None, None)).collect(),
         Some(Value::Array(a)) if a.len() <= MAX_POINTS => a
             .iter()
             .map(|v| {
-                let id = m.elements.id(level_param(c, m, &json!({"level": v}), "level")?).unwrap_or_default();
-                all.iter()
-                    .find(|(l, ..)| *l == id)
-                    .map(|(l, n, _)| (*l, n.clone()))
-                    .ok_or_else(|| bad(c, format!("`levels`: {v} is not a level")))
+                let (key, cut, bottom) = match v {
+                    Value::Object(o) => {
+                        if let Some(k) = o.keys().find(|k| !["level", "cut", "bottom"].contains(&k.as_str())) {
+                            return Err(bad(
+                                c,
+                                format!("`levels`: a storey is a level, or {{level, cut?, bottom?}}; `{k}` isn't one of those"),
+                            ));
+                        }
+                        (o.get("level").cloned().unwrap_or(Value::Null), num(c, v, "cut")?, num(c, v, "bottom")?)
+                    }
+                    other => (other.clone(), None, None),
+                };
+                let id = m.elements.id(level_param(c, m, &json!({"level": key}), "level")?).unwrap_or_default();
+                let i = all.iter().position(|(l, ..)| *l == id).ok_or_else(|| bad(c, format!("`levels`: {key} is not a level")))?;
+                Ok((i, cut, bottom))
             })
-            .collect::<Result<_, _>>()?,
-        Some(v) => return Err(bad(c, format!("`levels` is a list of levels by name or id, not {v}"))),
+            .collect::<Result<_, String>>()?,
+        Some(v) => return Err(bad(c, format!("`levels` is a list of levels by name or id, or of {{level, cut, bottom}}, not {v}"))),
     };
-    // Only this link drawn: the others are taken out of what the cut sees.
+    let mut storeys: Vec<(Id, String, f64, f64)> = Vec::new();
+    for (i, cut, bottom) in asked {
+        let Some((id, name, _)) = all.get(i) else { continue };
+        let h = storey(i);
+        let cut = cut.or(cut_all).unwrap_or((crate::flatten::CUT * h).round());
+        let bottom = bottom.or(bottom_all).unwrap_or((crate::flatten::BOTTOM * h).round());
+        if cut.abs() > MAX_COORD || bottom.abs() > MAX_COORD || bottom >= cut {
+            return Err(bad(
+                c,
+                format!("{name}: it is cut {cut} mm over its level and seen down to {bottom}: the bottom goes under the cut"),
+            ));
+        }
+        storeys.push((*id, name.clone(), cut, bottom));
+    }
+    // Only this link drawn: the others are taken out of what the cut sees; each storey's plan cut as asked.
     let mut only_this = (**m).clone();
     for other in links.iter().filter(|id| **id != link_id) {
         only_this.elements.remove(*other);
     }
+    if let Some(Element::Link(l)) = only_this.elements.get_mut(link_id) {
+        l.in_plans = true;
+    }
+    for (id, _, cut, bottom) in &storeys {
+        if let Some(Element::Level(l)) = only_this.elements.get_mut(*id) {
+            l.view_range = crate::model::ViewRange { top: None, cut: *cut, bottom: *bottom, depth: *bottom };
+            l.graphics.template = None;
+            l.section_box = false;
+        }
+    }
     let seen = crate::link::seen(&Arc::new(only_this));
     let mut made = Vec::new();
-    for (level, level_name) in &levels {
+    for (level, level_name, cut, bottom) in &storeys {
         let lines = crate::flatten::plan_lines(&seen, *level, crate::link::is_linked);
         if lines.is_empty() {
             continue;
@@ -10536,21 +10641,36 @@ fn flatten_link(s: &mut Session, p: &Value) -> R {
         let name = format!("{} - {level_name}", link.name);
         let cad = crate::cad::Cad::new(&name, None, crate::flatten::dxf(&lines).into_bytes()).map_err(|e| bad(c, e))?;
         let model = s.model_mut();
-        // Drawn anew: the drawing of the same name and where it was placed go first.
+        // Drawn anew: the drawing of the same name and where it was placed go first; what was erased of it, and its layers
+        // hidden, are kept.
         let placed: Vec<Id> =
             model.elements.iter().filter(|(_, e)| matches!(e, Element::CadImport(ci) if ci.cad == name)).map(|(id, _)| *id).collect();
+        let (mut erased, mut hidden) = (BTreeSet::new(), BTreeSet::new());
         for id in placed {
-            model.elements.remove(id);
+            if let Some(Element::CadImport(ci)) = model.elements.remove(id) {
+                erased.extend(ci.erased);
+                hidden.extend(ci.hidden);
+            }
         }
         model.cads.insert(name.clone(), cad);
         let reply = import_cad(s, &json!({"cad": name, "level": level, "position": "origin", "units": "mm"}))?;
-        made.push(json!({"level": level_name, "cad": name, "lines": lines.len(), "id": reply["id"]}));
+        let model = s.model_mut();
+        if let Some(Element::CadImport(ci)) = reply["id"].as_u64().and_then(|id| model.elements.get_mut(id)) {
+            ci.erased = erased;
+            ci.hidden = hidden;
+        }
+        made.push(json!({"level": level_name, "cad": name, "lines": lines.len(), "id": reply["id"], "cut": cut, "bottom": bottom}));
     }
     if made.is_empty() {
         return Err(bad(c, format!("{} has nothing a plan of these levels cuts or sees", link.name)));
     }
-    if !keep_link {
-        let model = s.model_mut();
+    let model = s.model_mut();
+    if keep_link {
+        // The plans draw its lines now: the link stays for the 3D view and sections.
+        if let Some(Element::Link(l)) = model.elements.get_mut(link_id) {
+            l.in_plans = false;
+        }
+    } else {
         model.elements.remove(link_id);
         model.loaded.remove(&link.path);
     }

@@ -909,6 +909,10 @@ pub struct CadImport {
     pub hidden: BTreeSet<String>,
     #[serde(default, skip_serializing_if = "is_preserve")]
     pub colors: Colors,
+    /// The objects of the drawing erased from this import (`cad_erase`), by [`crate::dxf::Entity::object`]: a sofa of a
+    /// flattened plan taken away, with all it draws.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub erased: BTreeSet<String>,
 }
 
 /// Where a placed drawing's point `p`, in its own units, is in plan, mm.
@@ -930,6 +934,8 @@ pub fn cad_unplace(ci: &CadImport, q: P2) -> P2 {
 
 /// The most layers an import may hide, and a drawing's mm to its unit at most and at least.
 pub const MAX_HIDDEN: usize = 10_000;
+/// The most objects of its drawing an import may erase.
+pub const MAX_ERASED: usize = 100_000;
 pub const CAD_SCALE: std::ops::RangeInclusive<f64> = 1e-6..=1e7;
 
 /// A spot elevation in a view: in a level's plan, the height of the top of `host` at `at`; in a
@@ -956,6 +962,14 @@ pub struct Link {
     pub at: P2,
     #[serde(default, skip_serializing_if = "is_zero")]
     pub angle: f64,
+    /// Whether plans draw it. One that is no, the 3D view and sections alone do: an architect's model whose plans the
+    /// project draws over flattened (`flatten_link`), or that it wants out of its plans until then.
+    #[serde(default = "yes", skip_serializing_if = "is_yes")]
+    pub in_plans: bool,
+}
+
+fn is_yes(b: &bool) -> bool {
+    *b
 }
 
 /// A schedule view: the elements of category `of` in rows, as the `schedule` command lists them:
@@ -2279,6 +2293,10 @@ pub struct Model {
     /// not loaded, and draws nothing.
     #[serde(skip)]
     pub loaded: BTreeMap<String, Arc<Model>>,
+    /// In the model the views draw ([`crate::link::seen`]), the elements of the links kept out of plans: the 3D view and
+    /// sections draw them, plans don't ([`crate::graphics::Look::of`]). Never in a file.
+    #[serde(skip)]
+    pub out_of_plans: BTreeSet<Id>,
 }
 
 impl Model {
@@ -2363,6 +2381,7 @@ impl Model {
             elements: Elements::new(),
             library: crate::library::Library::default(),
             loaded: BTreeMap::new(),
+            out_of_plans: BTreeSet::new(),
         };
         // A library to start from: each material its colour, its cut's pattern and its surface's, and the texture it has.
         for (name, color, cut, surface, texture) in [
@@ -5311,8 +5330,14 @@ impl Model {
                     if ci.hidden.len() > MAX_HIDDEN {
                         return Err(format!("{who}: it hides {} layers; up to {MAX_HIDDEN}", ci.hidden.len()));
                     }
+                    if ci.erased.len() > MAX_ERASED {
+                        return Err(format!("{who}: it erases {} objects of its drawing; up to {MAX_ERASED}", ci.erased.len()));
+                    }
                     for layer in &ci.hidden {
                         text(&format!("{who} hidden layer"), "name", layer)?;
+                    }
+                    for object in &ci.erased {
+                        text(&format!("{who} erased object"), "handle", object)?;
                     }
                     if let Some(b) = self.cad_box(id) {
                         for p in b {

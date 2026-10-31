@@ -41,6 +41,7 @@ impl<'a> Components<'a> {
                 material: pc.material.clone(),
                 caps: pc.caps,
                 round: pc.round,
+                mesh: pc.mesh,
             })
             .collect()
     }

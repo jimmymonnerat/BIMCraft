@@ -1985,6 +1985,11 @@ pub fn ifc(bytes: &[u8], name: &str) -> Result<Imported, String> {
     let classes: Vec<&str> = crate::runs::IFC.iter().map(|(_, class, _)| *class).chain(["IFCBEAMSTANDARDCASE"]).collect();
     for id in named(&classes).into_iter().filter(|id| e(*id).is_some_and(|x| x.name != "IFCFOOTING") || strip(*id)) {
         let Some(b) = e(id) else { continue };
+        // A gutter is no straight run: its body comes in as it is, a component (`Category::Generic`), read below.
+        let of_type = l.typed.get(&id).and_then(|t| e(*t)).and_then(|t| enumeration(t.args.get(9)));
+        if b.name == "IFCPIPESEGMENT" && (enumeration(b.args.get(8)) == Some("GUTTER") || of_type == Some("GUTTER")) {
+            continue;
+        }
         let declared = run_props.get(&id).and_then(|(_, c)| c.as_deref());
         let Some(category) = crate::runs::from_ifc(&b.name, enumeration(b.args.get(8)), declared) else { continue };
         let pts: Vec<P3> = r.body(b).into_iter().flatten().collect();

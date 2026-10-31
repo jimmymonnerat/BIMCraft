@@ -357,7 +357,7 @@ fn cad_scene(s: &mut Scene, m: &Model, ci: &crate::model::CadImport, p: P2, wind
     let in_view = look.hidden_layers(&ci.cad);
     let near = |b: [P2; 2]| b[0].0 <= hi.0 && b[1].0 >= lo.0 && b[0].1 <= hi.1 && b[1].1 >= lo.1;
     for e in &cad.dxf().entities {
-        if !cad.shows(e, &ci.hidden) || in_view.is_some_and(|h| h.contains(&e.layer)) || !near(e.shape.bounds()) {
+        if !cad.shows(e, ci) || in_view.is_some_and(|h| h.contains(&e.layer)) || !near(e.shape.bounds()) {
             continue;
         }
         match &e.shape {

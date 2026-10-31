@@ -3,9 +3,15 @@
 //! English, Brazilian Portuguese, Spanish, Swedish, Czech or French. Names already given stay as they are; the core's
 //! messages, which agents read, stay English.
 
+use bimcraft_i18n::msg;
 use serde::{Deserialize, Serialize};
 
 include!(concat!(env!("OUT_DIR"), "/catalogs.rs"));
+
+/// The storey a project starts with and the level over it, named in its language: a house of one storey, its pipes under
+/// its floor and on its roof, as a designer of building services starts one ("Térreo" and "Cobertura").
+pub const GROUND_FLOOR: &str = msg!("Ground Floor");
+pub const ROOF_LEVEL: &str = msg!("Roof Level");
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Language {

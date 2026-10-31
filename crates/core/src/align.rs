@@ -87,7 +87,7 @@ fn element_lines(m: &Model, e: &Element) -> Vec<Line> {
             cad.dxf()
                 .entities
                 .iter()
-                .filter(|e| cad.shows(e, &ci.hidden))
+                .filter(|e| cad.shows(e, ci))
                 .filter(|e| {
                     matches!(e.shape, crate::dxf::Shape::Line(..) | crate::dxf::Shape::Polyline { .. } | crate::dxf::Shape::Fill { .. })
                 })

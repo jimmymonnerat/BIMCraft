@@ -217,6 +217,9 @@ pub struct Entity {
     /// Its line weight, mm, when it has one of its own.
     pub weight: Option<f64>,
     pub shape: Shape,
+    /// The object of the drawing it belongs to: the handle of the INSERT it comes from or its own, where it stands among
+    /// the ENTITIES (`#5`) when the file gives none. What `cad_erase` takes away together.
+    pub object: String,
 }
 
 /// A DXF file read: what it draws, in its own unit.
@@ -497,7 +500,7 @@ impl<'a> Reader<'a> {
             (Some(lo), Some(hi)) if lo.0 <= hi.0 && lo.1 <= hi.1 => Some([lo, hi]),
             _ => None,
         };
-        let mut out = Out { entities: Vec::new(), left_out: BTreeMap::new(), work: 0 };
+        let mut out = Out { entities: Vec::new(), left_out: BTreeMap::new(), work: 0, object: String::new() };
         self.place(&mut out, &ents, Xf::ID, None, 0)?;
         let mut layers = std::mem::take(&mut self.layers);
         for e in &out.entities {
@@ -715,6 +718,8 @@ struct Out {
     entities: Vec<Entity>,
     left_out: BTreeMap<String, usize>,
     work: usize,
+    /// The object of the drawing being placed: the top-level entity's handle, or where it stands (`#5`).
+    object: String,
 }
 
 impl Out {
@@ -774,6 +779,9 @@ impl<'a> Reader<'a> {
     fn place(&self, out: &mut Out, ents: &[Ent<'a>], xf: Xf, inh: Option<&Inherit>, depth: usize) -> Result<(), String> {
         let mut i = 0;
         while let Some(e) = ents.get(i) {
+            if depth == 0 {
+                out.object = e.str(5).map(str::trim).filter(|h| !h.is_empty()).map_or_else(|| format!("#{i}"), str::to_string);
+            }
             i += 1;
             out.work += 1;
             if out.work > MAX_WORK {
@@ -839,12 +847,14 @@ impl<'a> Reader<'a> {
                 }
                 "MTEXT" => {
                     for line in mtext(e)? {
+                        let object = out.object.clone();
                         out.push(Entity {
                             layer: style.layer.clone(),
                             color: style.color,
                             linetype: style.linetype.clone(),
                             weight: style.weight,
                             shape: transformed(line, xf),
+                            object,
                         })?;
                     }
                     continue;
@@ -878,13 +888,17 @@ impl<'a> Reader<'a> {
                 }
             };
             match shape {
-                Some(shape) => out.push(Entity {
-                    layer: style.layer,
-                    color: style.color,
-                    linetype: style.linetype,
-                    weight: style.weight,
-                    shape: transformed(shape, xf),
-                })?,
+                Some(shape) => {
+                    let object = out.object.clone();
+                    out.push(Entity {
+                        layer: style.layer,
+                        color: style.color,
+                        linetype: style.linetype,
+                        weight: style.weight,
+                        shape: transformed(shape, xf),
+                        object,
+                    })?
+                }
                 None => out.left("empty"),
             }
         }

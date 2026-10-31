@@ -611,3 +611,55 @@ fn a_plan_fits_to_its_imports_as_to_the_rest_it_shows() {
     assert!(!render::plan_shows(&t.model, other_t).is_empty());
     assert!(!render::plan_shows(&s.model, other).is_empty());
 }
+
+/// A room's wall in metres on WALLS, and a sofa and a chair on FURN, each a block placed once: the sofa's INSERT with a
+/// handle, the chair's and the wall's with none.
+fn furnished() -> String {
+    let block = |name: &str, a: (f64, f64), b: (f64, f64)| {
+        pairs(&[(0, "BLOCK"), (8, "0"), (2, name), (70, "0"), (10, "0"), (20, "0")]) + &line("0", a, b) + &pairs(&[(0, "ENDBLK")])
+    };
+    let blocks =
+        format!("0\nSECTION\n2\nBLOCKS\n{}{}0\nENDSEC\n", block("SOFA", (0.0, 0.0), (2.0, 0.0)), block("CHAIR", (0.0, 0.0), (0.0, 0.5)));
+    let sofa = pairs(&[(0, "INSERT"), (5, "2F"), (8, "FURN"), (2, "SOFA"), (10, "1"), (20, "1")]);
+    let chair = pairs(&[(0, "INSERT"), (8, "FURN"), (2, "CHAIR"), (10, "5"), (20, "3")]);
+    let entities = sofa + &chair + &line("WALLS", (0.0, 0.0), (10.0, 0.0));
+    let text = dxf("6", &[("WALLS", "1", false), ("FURN", "3", false)], &entities);
+    text.replacen("0\nSECTION\n2\nENTITIES", &format!("{blocks}0\nSECTION\n2\nENTITIES"), 1)
+}
+
+#[test]
+fn an_object_of_a_drawing_is_erased_where_it_is_clicked_and_undo_or_restore_brings_it_back() {
+    let mut s = Session::new();
+    let id = run(&mut s, "import_cad", json!({"path": file("erase", "room.dxf", &furnished()), "position": "origin"}))["id"].clone();
+    let found = |s: &mut Session, at: [f64; 2]| run(s, "cad_query", json!({"id": id, "at": at, "reach": 20}))["found"] == true;
+    // The sofa, from (1000, 1000) to (3000, 1000): its INSERT, all it draws, goes.
+    let r = run(&mut s, "cad_erase", json!({"id": id, "at": [2000, 1010]}));
+    assert_eq!((r["object"].as_str(), r["layer"].as_str(), r["entities"].as_u64()), (Some("2F"), Some("FURN"), Some(1)), "{r}");
+    assert!(!found(&mut s, [2000.0, 1000.0]), "the sofa isn't there");
+    assert!(found(&mut s, [5000.0, 3200.0]) && found(&mut s, [5000.0, 0.0]), "the chair and the wall are");
+    // Nor is it snapped to.
+    let level = s.model.levels()[0].0;
+    let reach = Reach { point: 100.0, line: 100.0 };
+    assert_eq!(snap(&s.model, level, P2(1020.0, 1010.0), reach, &[], false, &Snaps::default()).kind, Kind::Free);
+    run(&mut s, "undo", json!({}));
+    assert!(found(&mut s, [2000.0, 1000.0]), "undo brings it back");
+    // What has no handle is known by its place in the file: the chair, then the wall.
+    run(&mut s, "cad_erase", json!({"id": id, "at": [5010, 3200]}));
+    run(&mut s, "cad_erase", json!({"id": id, "at": [7000, 10]}));
+    assert!(!found(&mut s, [5000.0, 3200.0]) && !found(&mut s, [7000.0, 0.0]) && found(&mut s, [2000.0, 1000.0]));
+    // Kept with the project.
+    let path = dir("erase").join("project.bimcraft");
+    run(&mut s, "save", json!({"path": path}));
+    let mut again = Session::new();
+    run(&mut again, "open", json!({"path": path}));
+    assert!(!found(&mut again, [7000.0, 0.0]));
+    // Restore brings all back; nothing near the point clicked is said so.
+    let r = run(&mut s, "cad_erase", json!({"id": id, "restore": true}));
+    assert_eq!(r["restored"], 2, "{r}");
+    assert!(found(&mut s, [5000.0, 3200.0]) && found(&mut s, [7000.0, 0.0]));
+    let e = fails(&mut s, "cad_erase", json!({"id": id, "at": [50_000, 50_000]}));
+    assert!(e.contains("nothing"), "{e}");
+    fails(&mut s, "cad_erase", json!({"id": id}));
+    fails(&mut s, "cad_erase", json!({"id": level, "at": [0, 0]}));
+    let _ = std::fs::remove_dir_all(dir("erase"));
+}
