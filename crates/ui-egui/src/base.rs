@@ -84,7 +84,7 @@ impl BimApp {
 /// A distance under 0.1 m (the smallest a height takes), as a wall's thickness is: 0.015 for 15 mm.
 fn small_metres(text: &str) -> Option<f64> {
     let m: f64 = text.trim().replace(',', ".").parse().ok()?;
-    (m.is_finite() && m > 0.0 && m < 0.1).then(|| m * 1000.0)
+    (m.is_finite() && m > 0.0 && m < 0.1).then_some(m * 1000.0)
 }
 
 /// A number as it is read in Portuguese and in English alike: up to `places` decimals, none trailing, a comma before them.
