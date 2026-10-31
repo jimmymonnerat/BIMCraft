@@ -722,3 +722,22 @@ pipe {"points": [[1000,1000],[3000,1000]], "type": "PVC 50"}"#);
     let pipe = m.elements.values().find_map(|e| e.run().filter(|_| e.category() == "pipe").cloned()).unwrap();
     assert_eq!(pipe.start, P2(1000.0, 1000.0));
 }
+
+#[test]
+fn flatten_turns_the_linked_architecture_into_lines_on_each_storey() {
+    let dir = tempfile::tempdir().unwrap();
+    let ifc = dir.path().join("Arquitetura.ifc");
+    let mut arq = Session::new();
+    arq.execute("wall", &serde_json::json!({"points": [[0, 0], [6000, 0], [6000, 4000]]})).unwrap();
+    arq.execute("save", &serde_json::json!({"path": ifc})).unwrap();
+    let mut h = app(&format!(r#"link {{"path": {:?}}}"#, ifc.to_string_lossy()));
+    press(&mut h, "Plumbing");
+    press(&mut h, "Flatten");
+    let m = &h.state().session.model;
+    assert!(m.elements.values().any(|e| matches!(e, Element::CadImport(_))), "{}", h.state().status.text);
+    assert!(!m.elements.values().any(|e| matches!(e, Element::Link(_))));
+    assert!(h.state().status.text.starts_with("Flattened"), "{}", h.state().status.text);
+    // With no link, it says so.
+    press(&mut h, "Flatten");
+    assert!(h.state().status.error, "{}", h.state().status.text);
+}

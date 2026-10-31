@@ -290,6 +290,13 @@ impl BimApp {
                 Tool::Origin,
             );
             self.buttons(ui, &[scale, origin]);
+            let tip = msg!(
+                "Flatten: the architect's linked model cut at each storey and kept as grey 2D lines of the project's own, to draw over; \
+                 the link goes, its file stays"
+            );
+            if big_button(ui, Icon::Plan, msg!("Flatten"), false, tip).clicked() {
+                self.flatten();
+            }
         });
         panel(ui, msg!("Pipe Network"), |ui| {
             let tip = msg!(
@@ -305,6 +312,13 @@ impl BimApp {
                 self.export_material_list(&ctx);
             }
         });
+    }
+
+    /// Flatten: `flatten_link`, one undo step, how many storeys it drew said in the status box.
+    pub(crate) fn flatten(&mut self) {
+        let Some(r) = self.run("flatten_link", serde_json::json!({})) else { return };
+        let storeys = r["drawings"].as_array().map_or(0, Vec::len).to_string();
+        self.status = crate::Status { text: crate::lang::tf("Flattened: {} storeys drawn in lines.", &[&storeys]), error: false };
     }
 
     /// Generate Fittings: `pipe_fittings`, one undo step, its result said in the status box.
