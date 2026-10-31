@@ -110,3 +110,11 @@ architect's base (a corner of the building), becomes the project's 0, 0: everyth
 what is drawn over them, moves by minus it in one step, through the motion `move` uses (`relocate`), so walls stay joined and hosted
 elements follow. Levels, sheets, views, schedules and the viewports on sheets stay; a level's extent, a view's crop and a section box are not
 moved yet. The origin where it is already moves nothing.
+
+Flatten Link (`flatten.rs`, the `flatten_link` command; tests in `crates/core/src/reference_tests.rs`). The architect's linked model is cut
+at each storey as its plan cuts it (`render::draw` of `link::seen` with only that link, at a pixel a millimetre so `f32` keeps the ends
+exact) and the strokes of its linked elements kept: what is cut and what is seen (`Part::Cut`, `Part::Projection`), never hatching,
+lettering, fills or pictures, a closed line's last edge too, to a hundredth of a millimetre. They become a DXF in millimetres
+(`flatten::dxf`: a grey layer for each category, a LINE each), held as a drawing named `<link> - <level>` and placed on that level by
+`import_cad` with `cad`, `position: origin`, so it lies where the link did. Flattening a storey again replaces its drawing and placing; a
+storey with nothing to draw is passed over. The link goes unless `keep_link` (its file stays, to link again); undo brings it back.

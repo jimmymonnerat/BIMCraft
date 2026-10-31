@@ -333,7 +333,7 @@ msgstr "Terminal aéreo (AT): un captor, donde hagas clic en la cubierta; Espaci
 msgid "Air Terminals"
 msgstr "Terminales aéreos"
 
-#: crates/core/src/commands.rs:954
+#: crates/core/src/commands.rs:966
 #: crates/ui-egui/src/lib.rs:324
 #: crates/ui-egui/src/sketch.rs:664
 msgid "Align"
@@ -349,7 +349,7 @@ msgstr "Alinear (AL): elige una línea de referencia y luego lo que se alinea co
 msgid "Aligned"
 msgstr "Alineada"
 
-#: crates/core/src/commands.rs:598
+#: crates/core/src/commands.rs:610
 msgid "Aligned Dimension"
 msgstr "Cota alineada"
 
@@ -677,7 +677,7 @@ msgstr "Copias de seguridad guardadas"
 msgid "Baluster Spacing"
 msgstr "Separación de balaustres"
 
-#: crates/core/src/commands.rs:10332
+#: crates/core/src/commands.rs:10344
 #: crates/ui-egui/src/reinforce.rs:88
 #: crates/ui-egui/src/reinforce.rs:109
 msgid "Bars"
@@ -720,7 +720,7 @@ msgstr "Espaciado de línea base"
 msgid "Bathtub"
 msgstr "Bañera"
 
-#: crates/core/src/commands.rs:459
+#: crates/core/src/commands.rs:471
 msgid "Beam"
 msgstr "Viga"
 
@@ -836,7 +836,7 @@ msgstr ""
 msgid "CAD drawings (DWG, DXF)"
 msgstr "Dibujos CAD (DWG, DXF)"
 
-#: crates/core/src/commands.rs:496
+#: crates/core/src/commands.rs:508
 msgid "Cable Tray"
 msgstr "Bandeja portacables"
 
@@ -844,7 +844,7 @@ msgstr "Bandeja portacables"
 msgid "Cable Tray (CT): click its start and its end; a chain of clicks makes a tray for each step"
 msgstr "Bandeja portacables (CT): haz clic en el inicio y el final; una cadena de clics hace una bandeja por tramo"
 
-#: crates/core/src/commands.rs:530
+#: crates/core/src/commands.rs:542
 msgid "Cabling"
 msgstr "Cableado"
 
@@ -951,7 +951,7 @@ msgstr "Buscar categoría:"
 msgid "Category:"
 msgstr "Categoría:"
 
-#: crates/core/src/commands.rs:257
+#: crates/core/src/commands.rs:269
 msgid "Ceiling"
 msgstr "Cielo raso"
 
@@ -1589,7 +1589,7 @@ msgstr "Colores"
 msgid "Colour"
 msgstr "Color"
 
-#: crates/core/src/commands.rs:434
+#: crates/core/src/commands.rs:446
 msgid "Column"
 msgstr "Columna"
 
@@ -1626,7 +1626,7 @@ msgstr "Compacta"
 msgid "Comparison"
 msgstr "Comparación"
 
-#: crates/core/src/commands.rs:895
+#: crates/core/src/commands.rs:907
 msgid "Component"
 msgstr "Componente"
 
@@ -1646,7 +1646,7 @@ msgstr "Hormigón"
 msgid "Concrete block"
 msgstr "Bloque de hormigón"
 
-#: crates/core/src/commands.rs:488
+#: crates/core/src/commands.rs:500
 msgid "Conduit"
 msgstr "Tubo conduit"
 
@@ -1711,7 +1711,7 @@ msgstr "{} filas copiadas, separadas por tabulación."
 msgid "Copper"
 msgstr "Cobre"
 
-#: crates/core/src/commands.rs:971
+#: crates/core/src/commands.rs:983
 #: crates/ui-egui/src/inquiry.rs:176
 #: crates/ui-egui/src/lib.rs:3997
 #: crates/ui-egui/src/lib.rs:4047
@@ -2085,7 +2085,7 @@ msgstr "Demoler (DW): haga clic en un elemento para demolerlo en la fase de la v
 msgid "Demolished"
 msgstr "Demolido"
 
-#: crates/core/src/commands.rs:7172
+#: crates/core/src/commands.rs:7184
 msgid "Dependent"
 msgstr "Dependiente"
 
@@ -2180,7 +2180,7 @@ msgstr "Diagonal descendente"
 msgid "Diagonal Up"
 msgstr "Diagonal ascendente"
 
-#: crates/core/src/commands.rs:10239
+#: crates/core/src/commands.rs:10251
 #: crates/core/src/fixtures.rs:173
 #: crates/ui-egui/src/lib.rs:3170
 #: crates/ui-egui/src/reinforce.rs:49
@@ -2285,7 +2285,7 @@ msgstr "No guardar"
 msgid "Done"
 msgstr "Hecho"
 
-#: crates/core/src/commands.rs:225
+#: crates/core/src/commands.rs:237
 msgid "Door"
 msgstr "Puerta"
 
@@ -2297,7 +2297,7 @@ msgstr "Puerta (DR): haz clic en un muro"
 msgid "Door Schedule"
 msgstr "Tabla de puertas"
 
-#: crates/core/src/commands.rs:588
+#: crates/core/src/commands.rs:600
 msgid "Dormer"
 msgstr "Buhardilla"
 
@@ -2335,7 +2335,7 @@ msgstr "Un doble clic en el nombre de una pestaña hace lo mismo; un clic en una
 msgid "Down"
 msgstr "Abajo"
 
-#: crates/core/src/commands.rs:512
+#: crates/core/src/commands.rs:524
 msgid "Down Conductor"
 msgstr "Conductor de bajada"
 
@@ -2428,7 +2428,7 @@ msgstr "El ancho de cada plumilla en el papel, en mm, en las vistas a cada escal
 msgid "Earthing"
 msgstr "Puesta a tierra"
 
-#: crates/core/src/commands.rs:521
+#: crates/core/src/commands.rs:533
 msgid "Earthing Conductor"
 msgstr "Conductor de puesta a tierra"
 
@@ -2503,7 +2503,7 @@ msgstr "Editar {}"
 msgid "Edit…"
 msgstr "Editar…"
 
-#: crates/core/src/commands.rs:10258
+#: crates/core/src/commands.rs:10270
 #: crates/core/src/fixtures.rs:193
 msgid "Elbow 90"
 msgstr "Codo 90"
@@ -2520,7 +2520,7 @@ msgstr "Equipo eléctrico"
 msgid "Electrical Equipment (EE): a distribution board, where you click on the wall; Space turns it"
 msgstr "Equipo eléctrico (EE): un cuadro de distribución, donde hagas clic en el muro; Espacio lo gira"
 
-#: crates/core/src/commands.rs:1644
+#: crates/core/src/commands.rs:1656
 msgid "Elements"
 msgstr "Elementos"
 
@@ -2774,7 +2774,7 @@ msgstr "Región rellena (FR): dibuje un área rellena con un patrón, en esta vi
 msgid "Filled region"
 msgstr "Región rellenada"
 
-#: crates/core/src/commands.rs:1040
+#: crates/core/src/commands.rs:1052
 msgid "Fillet Arc"
 msgstr "Arco de empalme"
 
@@ -2876,6 +2876,18 @@ msgstr "Ventana fija"
 msgid "Fixed to Dimension Line"
 msgstr "Fija a la línea de cota"
 
+#: crates/ui-egui/src/mep.rs:297
+msgid "Flatten"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:294
+msgid "Flatten: the architect's linked model cut at each storey and kept as grey 2D lines of the project's own, to draw over; the link goes, its file stays"
+msgstr ""
+
+#: crates/ui-egui/src/mep.rs:321
+msgid "Flattened: {} storeys drawn in lines."
+msgstr ""
+
 #: crates/ui-egui/src/lib.rs:3778
 msgid "Flip"
 msgstr "Invertir"
@@ -2902,7 +2914,7 @@ msgstr "Flotar"
 msgid "Floating"
 msgstr "Flotante"
 
-#: crates/core/src/commands.rs:242
+#: crates/core/src/commands.rs:254
 msgid "Floor"
 msgstr "Piso"
 
@@ -2927,7 +2939,7 @@ msgstr "Plantas"
 msgid "Floor Schedule"
 msgstr "Tabla de pisos"
 
-#: crates/core/src/commands.rs:336
+#: crates/core/src/commands.rs:348
 msgid "Floor by Face"
 msgstr "Piso por cara"
 
@@ -3117,11 +3129,11 @@ msgstr "Separación al elemento"
 msgid "Gate Valve"
 msgstr "Válvula de compuerta"
 
-#: crates/ui-egui/src/mep.rs:299
+#: crates/ui-egui/src/mep.rs:306
 msgid "Generate Fittings"
 msgstr ""
 
-#: crates/ui-egui/src/mep.rs:296
+#: crates/ui-egui/src/mep.rs:303
 msgid "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already fitted are left alone, and the open ends and what it can't fit yet are counted"
 msgstr ""
 
@@ -3165,7 +3177,7 @@ msgstr "Gráficos"
 msgid "Graphics card"
 msgstr "Tarjeta gráfica"
 
-#: crates/core/src/commands.rs:158
+#: crates/core/src/commands.rs:170
 msgid "Grid"
 msgstr "Eje"
 
@@ -3509,7 +3521,7 @@ msgstr "Aislar categoría (IC)"
 msgid "Isolate Element (HI)"
 msgstr "Aislar elemento (HI)"
 
-#: crates/core/src/commands.rs:451
+#: crates/core/src/commands.rs:463
 msgid "Isolated Footing"
 msgstr "Zapata aislada"
 
@@ -3530,7 +3542,7 @@ msgstr "Cursiva"
 msgid "Italic (Ctrl+I)"
 msgstr "Cursiva (Ctrl+I)"
 
-#: crates/core/src/commands.rs:10332
+#: crates/core/src/commands.rs:10344
 msgid "Item"
 msgstr "Artículo"
 
@@ -3674,7 +3686,7 @@ msgstr "Longitud"
 msgid "Lengths and sizes are mm on paper. The centerline defines geometry and dimensions."
 msgstr "Longitudes y tamaños en mm sobre papel. El eje define la geometría y las cotas."
 
-#: crates/core/src/commands.rs:151
+#: crates/core/src/commands.rs:163
 #: crates/ui-egui/src/newproject.rs:147
 #: crates/ui-egui/src/newproject.rs:191
 #: crates/ui-egui/src/newproject.rs:230
@@ -3945,7 +3957,7 @@ msgstr "Masa"
 msgid "Mass (MS): click the corners of the footprint; Enter, or the first corner again, finishes; Esc cancels"
 msgstr "Masa (MS): haz clic en las esquinas de la huella; Enter, o la primera esquina otra vez, termina; Esc cancela"
 
-#: crates/core/src/commands.rs:315
+#: crates/core/src/commands.rs:327
 msgid "Mass Floors"
 msgstr "Pisos de masa"
 
@@ -3957,7 +3969,7 @@ msgstr "Pisos de masa (MF): un piso en cada nivel que cruzan las masas seleccion
 msgid "Massing"
 msgstr "Volumetría"
 
-#: crates/core/src/commands.rs:946
+#: crates/core/src/commands.rs:958
 msgid "Match Properties"
 msgstr "Igualar propiedades"
 
@@ -3976,16 +3988,16 @@ msgstr "Propiedades igualadas: tipo '{}' aplicado a {} elemento(s)"
 msgid "Material"
 msgstr "Material"
 
-#: crates/core/src/commands.rs:10350
-#: crates/ui-egui/src/mep.rs:303
+#: crates/core/src/commands.rs:10362
+#: crates/ui-egui/src/mep.rs:310
 msgid "Material List"
 msgstr "Lista de materiales"
 
-#: crates/ui-egui/src/mep.rs:302
+#: crates/ui-egui/src/mep.rs:309
 msgid "Material List: the pipes in metres and 6 m bars, and the fixtures and fittings counted, saved as a workbook"
 msgstr ""
 
-#: crates/ui-egui/src/mep.rs:326
+#: crates/ui-egui/src/mep.rs:340
 msgid "Material list saved to {}"
 msgstr ""
 
@@ -4025,7 +4037,7 @@ msgstr "Maximizar"
 msgid "Maximum Riser Height"
 msgstr "Altura máxima de contrahuella"
 
-#: crates/core/src/commands.rs:1496
+#: crates/core/src/commands.rs:1508
 msgid "Measure"
 msgstr "Medir"
 
@@ -4150,7 +4162,7 @@ msgstr "Modificar muro"
 msgid "Mounting Height"
 msgstr "Altura de montaje"
 
-#: crates/core/src/commands.rs:963
+#: crates/core/src/commands.rs:975
 msgid "Move"
 msgstr "Mover"
 
@@ -4974,7 +4986,7 @@ msgstr "Imágenes"
 msgid "Picture…"
 msgstr "Imagen…"
 
-#: crates/core/src/commands.rs:477
+#: crates/core/src/commands.rs:489
 msgid "Pipe"
 msgstr "Tubería"
 
@@ -4998,7 +5010,7 @@ msgstr "Conexión de tubería"
 msgid "Pipe Fitting (PF): an elbow or a tee, where you click on a pipe's height; Space turns it"
 msgstr "Conexión de tubería (PF): codo o te, donde hagas clic, a la altura de la tubería; Espacio la gira"
 
-#: crates/ui-egui/src/mep.rs:294
+#: crates/ui-egui/src/mep.rs:301
 msgid "Pipe Network"
 msgstr ""
 
@@ -5426,7 +5438,7 @@ msgstr "Poner en este plano una vista que aún no está en ninguno"
 msgid "Quadrant"
 msgstr "Cuadrante"
 
-#: crates/core/src/commands.rs:10332
+#: crates/core/src/commands.rs:10344
 msgid "Quantity"
 msgstr "Cantidad"
 
@@ -5463,7 +5475,7 @@ msgstr "Símbolo de radio"
 msgid "Radius:"
 msgstr "Radio:"
 
-#: crates/core/src/commands.rs:561
+#: crates/core/src/commands.rs:573
 msgid "Railing"
 msgstr "Barandal"
 
@@ -5476,7 +5488,7 @@ msgstr "Barandal: haz clic en una escalera o una rampa para uno a cada lado, o h
 msgid "Railings"
 msgstr "Barandales"
 
-#: crates/core/src/commands.rs:551
+#: crates/core/src/commands.rs:563
 msgid "Ramp"
 msgstr "Rampa"
 
@@ -5765,7 +5777,7 @@ msgstr "Altura de contrahuella"
 msgid "Risers"
 msgstr "Contrahuellas"
 
-#: crates/core/src/commands.rs:571
+#: crates/core/src/commands.rs:583
 msgid "Roof"
 msgstr "Cubierta"
 
@@ -5777,7 +5789,7 @@ msgstr "Cubierta por extrusión"
 msgid "Roof by Extrusion: click a line's start and end, then how far across it's swept; its profile rises from the line"
 msgstr "Cubierta por extrusión: haz clic en el inicio y el final de una línea y luego hasta dónde se extiende; su perfil sube desde la línea"
 
-#: crates/core/src/commands.rs:344
+#: crates/core/src/commands.rs:356
 msgid "Roof by Face"
 msgstr "Cubierta por cara"
 
@@ -5793,7 +5805,7 @@ msgstr "Cubierta por perímetro: haz clic dentro de los muros para cubrirlos, en
 msgid "Roof tiles"
 msgstr "Tejas"
 
-#: crates/core/src/commands.rs:372
+#: crates/core/src/commands.rs:384
 msgid "Room"
 msgstr "Habitación"
 
@@ -5817,7 +5829,7 @@ msgstr "Cálculo de área de la habitación: dónde se miden las áreas de las h
 msgid "Room Schedule"
 msgstr "Tabla de habitaciones"
 
-#: crates/core/src/commands.rs:978
+#: crates/core/src/commands.rs:990
 msgid "Rotate"
 msgstr "Rotar"
 
@@ -5925,7 +5937,7 @@ msgstr "Escala: el papel que esta vista representa, 1 : n del modelo: su anotaci
 msgid "Scan"
 msgstr "Escaneo"
 
-#: crates/core/src/commands.rs:1348
+#: crates/core/src/commands.rs:1360
 msgid "Schedule"
 msgstr "Tabla"
 
@@ -6469,7 +6481,7 @@ msgstr "Spline por puntos: haga clic en los puntos por los que pasa; Intro termi
 msgid "Spline: click its control points; Enter finishes it"
 msgstr "Spline: haga clic en los puntos de control; Intro termina"
 
-#: crates/core/src/commands.rs:1020
+#: crates/core/src/commands.rs:1032
 msgid "Split"
 msgstr "Dividir"
 
@@ -6487,7 +6499,7 @@ msgstr "Dividir elemento (SL): haga clic en un muro o una línea donde dividirlo
 msgid "Split between the line's ends."
 msgstr "Divida entre los extremos de la línea."
 
-#: crates/core/src/commands.rs:689
+#: crates/core/src/commands.rs:701
 msgid "Spot Elevation"
 msgstr "Cota de nivel"
 
@@ -6495,7 +6507,7 @@ msgstr "Cota de nivel"
 msgid "Spot Elevation (EL): click a floor, a roof or a stair; in a section, a point"
 msgstr "Cota de nivel (EL): haz clic en un piso, una cubierta o una escalera; en una sección, en un punto"
 
-#: crates/ui-egui/src/mep.rs:323
+#: crates/ui-egui/src/mep.rs:337
 msgid "Spreadsheet"
 msgstr ""
 
@@ -6503,7 +6515,7 @@ msgstr ""
 msgid "Square Grid"
 msgstr "Cuadrícula"
 
-#: crates/core/src/commands.rs:539
+#: crates/core/src/commands.rs:551
 msgid "Stair"
 msgstr "Escalera"
 
@@ -6589,7 +6601,7 @@ msgstr "Recto"
 msgid "Structural"
 msgstr "Estructural"
 
-#: crates/core/src/commands.rs:442
+#: crates/core/src/commands.rs:454
 msgid "Structural Column"
 msgstr "Columna estructural"
 
@@ -6681,7 +6693,7 @@ msgstr "Símbolos"
 msgid "Symbols are the lines a door's or a window's plan draws; this family isn't one."
 msgstr "Los símbolos son las líneas que dibuja la planta de una puerta o ventana; esta familia no es una."
 
-#: crates/core/src/commands.rs:10332
+#: crates/core/src/commands.rs:10344
 #: crates/core/src/schedule.rs:190
 msgid "System"
 msgstr "Sistema"
@@ -6758,7 +6770,7 @@ msgstr "Normas técnicas"
 msgid "Technical Standards: configure drawing standards (NBR, ISO, ANSI, EU); now {}"
 msgstr "Normas técnicas: configurar normas de dibujo (NBR, ISO, ANSI, EU); ahora {}"
 
-#: crates/core/src/commands.rs:10259
+#: crates/core/src/commands.rs:10271
 #: crates/core/src/fixtures.rs:202
 msgid "Tee"
 msgstr "Te"
@@ -6799,7 +6811,7 @@ msgstr "Aislar elemento temporalmente"
 msgid "Temporary dimension {}"
 msgstr "Cota temporal {}"
 
-#: crates/core/src/commands.rs:618
+#: crates/core/src/commands.rs:630
 #: crates/ui-egui/src/notes.rs:503
 msgid "Text"
 msgstr "Texto"
@@ -7194,7 +7206,7 @@ msgstr "Recortar/Alargar elemento único"
 msgid "Trim/Extend Single Element: pick the line to trim or extend to, then the line to change, on the part to keep"
 msgstr "Recortar/Alargar elemento único: elija la línea límite y luego la línea que cambiar, en la parte que conservar"
 
-#: crates/core/src/commands.rs:994
+#: crates/core/src/commands.rs:1006
 #: crates/ui-egui/src/sketch.rs:667
 msgid "Trim/Extend to Corner"
 msgstr "Recortar/extender a esquina"
@@ -7356,7 +7368,7 @@ msgstr "Mostrar elemento (EU): devuelve los elementos seleccionados que esta vis
 msgid "Unhide Elements"
 msgstr "Mostrar elementos"
 
-#: crates/core/src/commands.rs:10332
+#: crates/core/src/commands.rs:10344
 msgid "Unit"
 msgstr "Unidad"
 
@@ -7368,7 +7380,7 @@ msgstr "Unidades"
 msgid "Units Format"
 msgstr "Formato de unidades"
 
-#: crates/core/src/commands.rs:7313
+#: crates/core/src/commands.rs:7325
 msgid "Unnamed"
 msgstr "Sin nombre"
 
@@ -7397,7 +7409,7 @@ msgstr "Arriba, después derecha"
 msgid "Update now"
 msgstr "Actualizar ahora"
 
-#: crates/core/src/commands.rs:352
+#: crates/core/src/commands.rs:364
 msgid "Update to Face"
 msgstr "Actualizar a la cara"
 
@@ -7563,7 +7575,7 @@ msgstr "Volumen (m³)"
 msgid "WC"
 msgstr "Inodoro"
 
-#: crates/core/src/commands.rs:212
+#: crates/core/src/commands.rs:224
 msgid "Wall"
 msgstr "Muro"
 
@@ -7575,7 +7587,7 @@ msgstr "Muro (WA): cada clic construye un muro; Enter o Esc termina la cadena"
 msgid "Wall Centreline"
 msgstr "Línea central del muro"
 
-#: crates/core/src/commands.rs:469
+#: crates/core/src/commands.rs:481
 msgid "Wall Footing"
 msgstr "Zapata corrida"
 
@@ -7587,7 +7599,7 @@ msgstr "Zapata corrida (FW): haz clic en el inicio y el final, o en cadena, bajo
 msgid "Wall Schedule"
 msgstr "Tabla de muros"
 
-#: crates/core/src/commands.rs:327
+#: crates/core/src/commands.rs:339
 msgid "Wall by Face"
 msgstr "Muro por cara"
 
@@ -7685,7 +7697,7 @@ msgstr "Tabla de ventanas"
 msgid "Windows"
 msgstr "Ventanas"
 
-#: crates/core/src/commands.rs:504
+#: crates/core/src/commands.rs:516
 msgid "Wire"
 msgstr "Cable"
 
@@ -8235,7 +8247,7 @@ msgstr "{} familia {}: {}"
 msgid "{} files, brought in as one scan's stations"
 msgstr "{} archivos, traídos como las estaciones de un solo escaneo"
 
-#: crates/ui-egui/src/mep.rs:315
+#: crates/ui-egui/src/mep.rs:329
 msgid "{} fittings placed, {} open ends, {} nodes not fitted"
 msgstr ""
 

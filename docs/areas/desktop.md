@@ -337,3 +337,4 @@ comma or a point; under 0.1 m reads as a wall's thickness does), and runs `scale
 off its units, a number that isn't one) is said inside the box, which stays open; the tool stays on afterwards, as Revit's do.
 Set Origin (`Tool::Origin`) is one click, snapped: `set_origin` at that point, then Modify again and the view fitted, so what moved stays
 in sight.
+Flatten runs `flatten_link` on the project's link and says how many storeys it drew; with no link, or several, the command's words say what to do.
