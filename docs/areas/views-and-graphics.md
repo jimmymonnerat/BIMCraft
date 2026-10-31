@@ -418,7 +418,7 @@ link at the height of one of the project's (1 mm) is that level, another comes i
 them without knowing: `Look::with` makes a linked id halftone, and picking never answers one (`Drawing::pick_all`, `in_box`, `Image::pick`,
 `in_box`, `shows` and `Mesh::pick` leave them out). The commands that make an image (`render`, `save` to svg, png or pdf) draw `seen`; the desktop's
 `view_model` does, cached by the project's `Arc`. The schedules, `Model::check`, IFC and every command that edits work on the project itself.
-To do: shared coordinates, a link's graphics overrides and visibility per view, hosting on a linked wall, unloading.
+`levels_in` reads another file's levels without opening or linking it, so a new project's storeys can match the model it links. To do: shared coordinates, a link's graphics overrides and visibility per view, hosting on a linked wall, unloading.
 
 ## Dimensions
 

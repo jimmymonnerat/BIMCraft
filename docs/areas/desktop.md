@@ -326,3 +326,7 @@ from the last one (its height, the next number) and the top level's name follows
 what is missing (a name, a folder, a height that isn't one, two levels of one name, a file already there, which is never overwritten);
 when all is there it guards the project behind (`Pending::Create`), runs `new` with `heights` (mm) and `names`, and saves the project in
 the folder as `<name>.bimcraft`, so it is in Recent and nothing is unsaved. New Project stays the quick empty project, as Ctrl+N is.
+Choose IFC… takes the architect's model the project is drawn over: its levels are read without opening it (the core's `levels_in`), and
+the storeys follow them (a storey between each two levels, its height their difference, the last level the top; the project named after the
+file while no name is typed), so the link's levels fall on the project's and none comes in as `link: level`. Create links it once the project
+is saved (beside the project, by a path relative to its folder when it is in it, so the folder can move) and saves again.
