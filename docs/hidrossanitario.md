@@ -62,7 +62,7 @@ sem copiar ícones, textos ou conteúdo da AltoQi.
 
 ## Análise dos vídeos
 
-**O que ele disse nos vídeos 1 e 2** (transcrições em Drive > DIVERSOS > treinamento ia, um .txt por vídeo):
+**O que ele disse nos vídeos 1 e 2** (transcrições na pasta de vídeos do Drive dele, um .txt por vídeo):
 - A **geração de pranchas e o detalhamento são o principal gargalo** e o que ele mais quer **automatizar** no programa novo.
 - Estimou **cerca de 5 horas** só organizando 13 pranchas (6 HID, 7 SAN) para impressão num projeto.
 - O que toma tempo: cada "Inserir do projeto" demora a carregar; os detalhes não cabem e ele reorganiza à mão (o que não
@@ -76,11 +76,11 @@ sem copiar ícones, textos ou conteúdo da AltoQi.
 pavimento em pranchas com a margem dele, em ordem, alinhados em grade, abrindo prancha nova quando não cabe, e deixa só o
 ajuste fino para ele. Tubos cortados que só viram um ponto num corte devem sumir sozinhos.
 
-**Vídeo 1** (31/10/2026, 4 min, projeto "hidrossanitario Ferlim", etapa de pranchas):
+**Vídeo 1** (31/10/2026, 4 min, um projeto real dele, etapa de pranchas):
 - Na planta, regiões de detalhe marcadas com triângulos vermelhos de corte em volta de cada ambiente molhado (H21, H24, H25…).
 - **Detalhe isométrico** por região: isométrico + tabela de peças ao lado + vistas das paredes.
-- Árvore **Pranchas**: Desenhos > Hidráulico (HID 01–06), Sanitário (SAN 01–07), Arquitetônico; Margens ("Prancha Bim Ac",
-  carimbo BIM AC LTDA); Revisões.
+- Árvore **Pranchas**: Desenhos > Hidráulico (HID 01–06), Sanitário (SAN 01–07), Arquitetônico; Margens (o modelo de
+  margem com o carimbo da empresa dele); Revisões.
 - Prancha nova: **Inserir margem** (escolhe o modelo) → **Inserir do projeto** (árvore: pavimento > Hidráulico/Sanitário/Drawing,
   Imagens 3D, Esquemas: isométrico hidráulico, vertical hidráulico, vertical sanitário) → arrasta os detalhes para dentro da margem.
 - Faixa de opções usada: Arquivo, Desenhos, Elementos, Lançamento, Operações, Colaboração. Operações: Definir peças pendentes,
@@ -113,17 +113,17 @@ ajuste fino para ele. Tubos cortados que só viram um ponto num corte devem sumi
 3. Vista da parede de cada ponto, com as alturas cotadas.
 4. Detalhes como vistas vivas na prancha, refeitos quando o modelo muda; abrir o original, editar na prancha, mover, girar,
    escalar.
-5. Margem/carimbo de modelo (o "Prancha Bim Ac") e árvore de pranchas por disciplina (HID, SAN).
+5. Margem/carimbo de modelo (o dele) e árvore de pranchas por disciplina (HID, SAN).
 
 O BIMCraft já tem pranchas, vistas que se refazem do modelo (viewports), cortes, tabelas e 3D: a base existe; falta o detalhe
 isométrico por região, os marcadores de peça ligados à tabela e a vista de parede do ponto.
 
-**Como gravar os próximos**: Recordly, exportar em 720p e qualidade média (até ~80 MB por arquivo; dividir os longos); câmera
-num canto que não cubra o painel Pranchas nem o carimbo; dar zoom nas janelas de diálogo; mandar um resumo escrito, porque a
-narração não pode ser transcrita no ambiente de trabalho. Pasta: Drive > DIVERSOS > treinamento ia.
+**Como gravar os próximos**: Recordly, exportar em 720p e qualidade média (até ~100 MB por arquivo; dividir os longos);
+câmera num canto que não cubra o painel Pranchas nem o carimbo; dar zoom nas janelas de diálogo; conferir que a gravação
+tem áudio (um dos vídeos saiu sem); narrar o que faz e por quê. Os vídeos ficam numa pasta do Drive dele, que a sessão lê pelo
+computador ligado; o processo de análise está em [tools/videos/README.md](../tools/videos/README.md).
 
 ## Referências do usuário
 
-- Projeto de referência no QiBuilder: `K:\Meu Drive\Projetos\2026\23 - HIDROSSANITÁRIO FERLIM` (conector MCP AltoQi Axis,
-  QiBuilder 2026 Infinity).
-- IFC de teste da arquitetura: JCG_SUELLEN_ARQ_AP_R00.ifc (Revit 27, IFC4, 9 níveis). Não vai para o repositório.
+Os nomes dos projetos, dos clientes e os caminhos das pastas dele ficam fora deste repositório, que é público: estão nas
+notas da sessão e na pasta de vídeos do Drive dele.

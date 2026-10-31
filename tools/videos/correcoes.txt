@@ -1,0 +1,13 @@
+# Words speech recognition gets wrong in these recordings, put right after it. `wrong => right` matches whole words;
+# `re: pattern => replacement` is a Python regular expression.
+parvamento => pavimento
+pavimentos superior => pavimento superior
+pranches => pranchas
+enaborando => elaborando
+re: \bI[dD] (\d{2})\b => HID \1
+re: \b[Ss]an (\d{2})\b => SAN \1
+Quebuilder => QiBuilder
+Qbuilder => QiBuilder
+Kibuilder => QiBuilder
+K-Builder => QiBuilder
+Alto Qi => AltoQi

@@ -1,0 +1,46 @@
+# Terms that steer speech recognition towards a hydraulic designer's words (Portuguese). One a line; keep it short, the
+# model reads only the first few hundred words. Names of clients and projects go in a private file of the user's, never here.
+QiBuilder
+AltoQi
+prancha
+pranchas
+HID
+SAN
+detalhe isométrico
+Inserir do projeto
+Inserir margem
+Exibir croqui
+Exibir detalhamento
+vista 3D
+pavimento
+hidrossanitário
+água fria
+água quente
+esgoto
+ventilação
+pluvial
+prumada
+barrilete
+ramal
+sub-ramal
+cisterna
+reservatório
+registro de gaveta
+registro de pressão
+joelho
+tê
+luva
+bucha de redução
+PVC soldável
+caixa sifonada
+ralo
+caixa de gordura
+caixa de inspeção
+tubo de queda
+legenda de peças
+lista de materiais
+carimbo
+corte
+cota
+lançamento
+detalhamento
