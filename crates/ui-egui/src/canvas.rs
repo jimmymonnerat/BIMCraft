@@ -1653,6 +1653,15 @@ impl BimApp {
                     (false, Some(from)) => return self.turn(centre, angle_between(centre, from, v.mm(at), self.snaps.angle)),
                 };
             }
+            // Set Origin: the point clicked is the project's 0, 0; the view follows, and Modify again.
+            Tool::Origin => {
+                let p = self.snap_point(m, level, v, at, &[], mods.shift);
+                if self.run("set_origin", json!({"at": [p.0, p.1]})).is_some() {
+                    self.status = crate::Status { text: t("The origin is set: that point is 0, 0 now.").to_string(), error: false };
+                    self.tool = Tool::Modify;
+                    self.fit();
+                }
+            }
             // Scale by Reference: two points on the base, then the distance they are.
             &Tool::ScaleRef(first) => {
                 let p = self.snap_point(m, level, v, at, first.as_slice(), mods.shift);

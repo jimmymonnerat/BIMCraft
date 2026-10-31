@@ -278,12 +278,18 @@ impl BimApp {
         });
         panel(ui, msg!("Base"), |ui| {
             let scale = (
-                Icon::Linear,
+                Icon::Measure,
                 msg!("Scale by Reference"),
                 msg!("Scale by Reference: click two points of the base a known distance apart, as the faces of a 15 cm wall, then type it"),
                 Tool::ScaleRef(None),
             );
-            self.buttons(ui, &[scale]);
+            let origin = (
+                Icon::Spot,
+                msg!("Set Origin"),
+                msg!("Set Origin: click the point every discipline's project shares, as a corner of the building; it becomes 0, 0"),
+                Tool::Origin,
+            );
+            self.buttons(ui, &[scale, origin]);
         });
         panel(ui, msg!("Pipe Network"), |ui| {
             let tip = msg!(

@@ -188,6 +188,8 @@ pub enum Tool {
     Measure(Option<P2>),
     /// Scale by Reference: two points of a known distance on the base, the first once clicked.
     ScaleRef(Option<P2>),
+    /// Set Origin: one click on the base, the point every discipline shares.
+    Origin,
     /// Tag the door or window clicked.
     Tag,
     /// A section: its start, once clicked.
@@ -1192,6 +1194,7 @@ impl BimApp {
             Tool::Spot => Some("Spot Elevation"),
             Tool::Measure(_) => Some("Measure"),
             Tool::ScaleRef(_) => Some(msg!("Scale by Reference")),
+            Tool::Origin => Some(msg!("Set Origin")),
             Tool::Tag => Some("Tag"),
             Tool::Section(_) => Some("Section"),
             Tool::Elevation => Some("Elevation"),
@@ -4191,6 +4194,7 @@ impl BimApp {
             Tool::Measure(Some(_)) => msg!("Click its end: its length and angle read beside it. Esc cancels."),
             Tool::ScaleRef(None) => msg!("Click a point of the base whose distance to another you know, as one face of a wall."),
             Tool::ScaleRef(Some(_)) => msg!("Click the other point: then type how far apart they are. Esc cancels."),
+            Tool::Origin => msg!("Click the point every discipline shares, as a corner of the building: it becomes 0, 0."),
             Tool::Tag => msg!("Click an element to tag it with its type, a door's or window's with its mark, or with the field in Label."),
             Tool::Angular(refs) if refs.len() < 2 => msg!("Pick a wall, a grid or another line; then one that meets it."),
             Tool::Angular(_) => msg!("Click where the arc goes: the angle on that side. Esc cancels."),

@@ -697,3 +697,28 @@ fn material_list_asks_where_and_writes_the_workbook_there() {
     assert!(bytes.starts_with(b"PK"), "a workbook (a zip) was written");
     assert!(h.state().status.text.starts_with("Material list saved to"), "{}", h.state().status.text);
 }
+
+#[test]
+fn set_origin_makes_the_point_clicked_0_0_and_goes_back_to_modify() {
+    let mut h = app(r#"wall {"points": [[0,0],[8000,0],[8000,6000]]}
+pipe {"points": [[1000,1000],[3000,1000]], "type": "PVC 50"}"#);
+    press(&mut h, "Plumbing");
+    press(&mut h, "Set Origin");
+    assert_eq!(h.state().tool, Tool::Origin);
+    // The building's corner, where the walls meet.
+    click(&mut h, P2(8000.0, 0.0));
+    assert_eq!(h.state().tool, Tool::Modify);
+    let m = &h.state().session.model;
+    let pipe = m.elements.values().find_map(|e| e.run().filter(|_| e.category() == "pipe").cloned()).unwrap();
+    assert_eq!((pipe.start, pipe.end), (P2(-7000.0, 1000.0), P2(-5000.0, 1000.0)));
+    let corner = m.elements.values().any(|e| match e {
+        Element::Wall(w) => w.start == P2(0.0, 0.0) || w.end == P2(0.0, 0.0),
+        _ => false,
+    });
+    assert!(corner, "the corner clicked is 0, 0");
+    // One undo step puts it back.
+    h.state_mut().run("undo", serde_json::json!({}));
+    let m = &h.state().session.model;
+    let pipe = m.elements.values().find_map(|e| e.run().filter(|_| e.category() == "pipe").cloned()).unwrap();
+    assert_eq!(pipe.start, P2(1000.0, 1000.0));
+}
