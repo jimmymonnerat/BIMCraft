@@ -111,6 +111,8 @@ impl Category {
     fn classes(self) -> &'static [&'static str] {
         match self {
             Category::Furniture => &["IFCFURNISHINGELEMENT", "IFCSYSTEMFURNITUREELEMENT"],
+            // IFC2x3 has no sanitary terminal of its own: a basin or a WC is a flow terminal there, as Revit and ArchiCAD export it.
+            Category::Plumbing => &["IFCFLOWTERMINAL"],
             _ => &[],
         }
     }
