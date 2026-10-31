@@ -113,6 +113,16 @@ pub static ALL: &[Command] = &[
          `factor`, `id` and `measured` (mm)",
         scale_by_reference,
     ),
+    edit(
+        "set_origin",
+        "Set Origin",
+        &[],
+        "{at: [x, y]} the point every discipline's project shares, as a designer picks it on the architect's base (a corner of the \
+         building): everything in plan moves by -`at`, the links and CAD drawings with what is drawn over them, so that point is the \
+         project's 0, 0 and each discipline's model lies over the others. Levels, sheets and the viewports on them stay. Returns \
+         `moved` (how many elements) and `by` [dx, dy]",
+        set_origin,
+    ),
     other(
         "levels_in",
         "Levels in a File",
@@ -10434,4 +10444,28 @@ fn scale_by_reference(s: &mut Session, p: &Value) -> R {
         }
         _ => Err(bad(c, format!("element {id} is neither a CAD drawing nor a linked model"))),
     }
+}
+
+/// The point clicked made the project's 0, 0: everything that has a place in plan moved by minus it, as one step.
+fn set_origin(s: &mut Session, p: &Value) -> R {
+    let c = "set_origin";
+    only(c, p, &["at"])?;
+    let at = point_req(c, p, "at")?;
+    let by = P2(-at.0, -at.1);
+    if at.length() < TOL {
+        return Ok(json!({"moved": 0, "by": [by.0, by.1]}));
+    }
+    let shift = |q: P2| q + by;
+    let mo = Motion { map: &shift, slide: Some(by), mirror: false };
+    let m = &s.model;
+    let all: BTreeSet<Id> = m.elements.iter().map(|(id, _)| *id).collect();
+    // What has a place in plan: not a level, a sheet, a view or a schedule, and not a viewport, which sits on its sheet's paper.
+    let ids: Vec<Id> = all
+        .iter()
+        .copied()
+        .filter(|id| !matches!(m.elements.get(*id), Some(Element::Viewport(_))))
+        .filter(|id| transformed(c, m, *id, &mo, &all).is_ok())
+        .collect();
+    relocate(c, s, &ids, &mo, None)?;
+    Ok(json!({"moved": ids.len(), "by": [by.0, by.1]}))
 }

@@ -104,3 +104,40 @@ fn what_to_scale_and_by_what_must_be_clear() {
         fails(&mut s, "scale_by_reference", p);
     }
 }
+
+#[test]
+fn the_origin_clicked_becomes_the_project_s_0_0_and_everything_keeps_its_place_on_the_base() {
+    let dir = folder("origin");
+    let ifc = dir.join("arq.ifc");
+    let mut arq = Session::new();
+    run(&mut arq, "wall", json!({"points": [[0, 0], [5000, 0], [5000, 4000]]}));
+    run(&mut arq, "save", json!({"path": ifc}));
+    let mut s = Session::new();
+    let link = run(&mut s, "link", json!({"path": ifc}))["id"].clone();
+    run(&mut s, "import_cad", json!({"path": base("origin"), "units": "mm", "position": "origin"}));
+    run(&mut s, "pipe", json!({"points": [[1000, 500], [3000, 500]], "type": "PVC 50"}));
+    let before = placed(&s, (0.0, 0.0));
+    // The corner of the architect's building: where every discipline puts its 0,0.
+    let r = run(&mut s, "set_origin", json!({"at": [5000, 4000]}));
+    assert_eq!(r["by"], json!([-5000.0, -4000.0]), "{r}");
+    let Some(Element::Link(l)) = s.model.elements.get(link.as_u64().unwrap()) else { panic!("the link") };
+    assert_eq!(l.at, P2(-5000.0, -4000.0), "the link moves with the rest");
+    assert!(close(placed(&s, (0.0, 0.0)), before - P2(5000.0, 4000.0)), "and the drawing");
+    let pipe = s.model.elements.values().find_map(|e| e.run().filter(|_| e.category() == "pipe").cloned()).unwrap();
+    assert_eq!((pipe.start, pipe.end), (P2(-4000.0, -3500.0), P2(-2000.0, -3500.0)), "and what was drawn over them");
+    assert_eq!(s.model.check(), Ok(()));
+    // One undo step takes it all back.
+    run(&mut s, "undo", json!({}));
+    assert!(close(placed(&s, (0.0, 0.0)), before));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_origin_must_be_a_point() {
+    let mut s = Session::new();
+    for p in [json!({}), json!({"at": "corner"}), json!({"at": [1e300, 0]}), json!({"at": [0, 0], "angle": 5})] {
+        fails(&mut s, "set_origin", p);
+    }
+    let r = run(&mut s, "set_origin", json!({"at": [0, 0]}));
+    assert_eq!(r["moved"], json!(0), "the origin where it is moves nothing");
+}
