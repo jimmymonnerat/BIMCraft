@@ -792,9 +792,13 @@ fn degrees(a: f64) -> String {
 /// The point a tool picked first, while it has one.
 fn start_of(tool: &Tool) -> &[P2] {
     match tool {
-        Tool::Grid(start) | Tool::Move(start) | Tool::Copy(start) | Tool::Section(start) | Tool::Measure(start) | Tool::Run(_, start) => {
-            start.as_slice()
-        }
+        Tool::Grid(start)
+        | Tool::Move(start)
+        | Tool::Copy(start)
+        | Tool::Section(start)
+        | Tool::Measure(start)
+        | Tool::ScaleRef(start)
+        | Tool::Run(_, start) => start.as_slice(),
         _ => &[],
     }
 }
@@ -1648,6 +1652,18 @@ impl BimApp {
                     (false, None) => Tool::Rotate { centre, start: Some(v.mm(at)), place: false },
                     (false, Some(from)) => return self.turn(centre, angle_between(centre, from, v.mm(at), self.snaps.angle)),
                 };
+            }
+            // Scale by Reference: two points on the base, then the distance they are.
+            &Tool::ScaleRef(first) => {
+                let p = self.snap_point(m, level, v, at, first.as_slice(), mods.shift);
+                match first {
+                    None => self.tool = Tool::ScaleRef(Some(p)),
+                    Some(a) if a.dist(p) > TOL => {
+                        self.tool = Tool::ScaleRef(None);
+                        self.ask_scale(a, p);
+                    }
+                    Some(_) => {}
+                }
             }
             // A ruler: its start, then its end, which stays on show until Esc or another start.
             &Tool::Measure(first) => {
@@ -3027,7 +3043,8 @@ impl BimApp {
             | Tool::Section(None)
             | Tool::Shaft(None)
             | Tool::SlopeArrow(None)
-            | Tool::Measure(_) => start_of(&self.tool),
+            | Tool::Measure(_)
+            | Tool::ScaleRef(_) => start_of(&self.tool),
             // The section a click would end, and the elevation a click would place.
             &Tool::Section(Some(start)) => {
                 let end = self.found(sc, q, &[start], shift);

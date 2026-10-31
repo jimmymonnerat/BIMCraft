@@ -276,6 +276,15 @@ impl BimApp {
             );
             self.buttons(ui, &[pipe, Self::fixture_button("plumbing"), Self::fixture_button("fitting"), Self::fixture_button("accessory")]);
         });
+        panel(ui, msg!("Base"), |ui| {
+            let scale = (
+                Icon::Linear,
+                msg!("Scale by Reference"),
+                msg!("Scale by Reference: click two points of the base a known distance apart, as the faces of a 15 cm wall, then type it"),
+                Tool::ScaleRef(None),
+            );
+            self.buttons(ui, &[scale]);
+        });
         panel(ui, msg!("Pipe Network"), |ui| {
             let tip = msg!(
                 "Generate Fittings: an elbow or a tee where pipes meet at 90° in plan, of the pipes' diameter; nodes already \

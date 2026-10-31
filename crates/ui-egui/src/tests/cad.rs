@@ -191,3 +191,36 @@ fn a_dwg_comes_in_through_the_box_with_the_reader_the_app_is_given_and_its_notes
     let status = &h.state().status;
     assert!(!status.error && status.text.contains("3 of the DWG's object records"), "{status:?}");
 }
+
+#[test]
+fn scale_by_reference_scales_the_base_by_two_points_and_the_distance_typed() {
+    // A plan drawn in metres, read as if each unit were 100 mm: the room comes in a tenth of its size.
+    let path = drawing("scale", "plan.dxf");
+    let script = format!(r#"import_cad {{"path": {:?}, "scale": 100, "position": "origin"}}"#, path.to_string_lossy());
+    let mut h = app(&script);
+    let id = imports(&h)[0];
+    press(&mut h, "Plumbing");
+    press(&mut h, "Scale by Reference");
+    assert_eq!(h.state().tool, Tool::ScaleRef(None));
+    // The room's south wall, end to end: 1 m as it came in, 10 m as it is.
+    click(&mut h, P2(0.0, 0.0));
+    click(&mut h, P2(1000.0, 0.0));
+    let asked = h.state().scale_dialog.clone().expect("the distance is asked for");
+    assert_eq!(asked.length, "1", "the distance as it is now, to type over");
+    h.state_mut().scale_dialog.as_mut().unwrap().length = "10".into();
+    h.run();
+    press(&mut h, "OK");
+    assert!(h.state().scale_dialog.is_none());
+    let ci = import(&h, id);
+    assert!((ci.scale - 1000.0).abs() < 1e-6, "{}", ci.scale);
+    assert!(h.state().status.text.contains("10"), "{}", h.state().status.text);
+    // The tool stays on, as Revit's do. What isn't a distance is said inside the box, and nothing changes.
+    assert_eq!(h.state().tool, Tool::ScaleRef(None));
+    click(&mut h, P2(0.0, 0.0));
+    click(&mut h, P2(500.0, 0.0));
+    h.state_mut().scale_dialog.as_mut().unwrap().length = "dez".into();
+    h.run();
+    press(&mut h, "OK");
+    assert!(h.state().scale_dialog.as_ref().is_some_and(|d| d.error.is_some()));
+    assert!((import(&h, id).scale - 1000.0).abs() < 1e-6);
+}

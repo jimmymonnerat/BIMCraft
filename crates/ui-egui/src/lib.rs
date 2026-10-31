@@ -9,6 +9,7 @@ use crate::popup::Modal;
 
 use bimcraft_i18n::msg;
 
+mod base;
 mod browser;
 mod cad;
 mod camera;
@@ -185,6 +186,8 @@ pub enum Tool {
     Spot,
     /// A ruler laid between two points: the first, once clicked.
     Measure(Option<P2>),
+    /// Scale by Reference: two points of a known distance on the base, the first once clicked.
+    ScaleRef(Option<P2>),
     /// Tag the door or window clicked.
     Tag,
     /// A section: its start, once clicked.
@@ -660,6 +663,8 @@ pub struct BimApp {
     purge_dialog: Option<purge::PurgeDialog>,
     /// Create Project, the start page's form, while it is open.
     create_project: Option<newproject::CreateProject>,
+    /// Scale by Reference's distance, once its two points are clicked.
+    scale_dialog: Option<base::ScaleDialog>,
     /// Manage > Select by ID and IDs of Selection, while open.
     select_by_id: Option<inquiry::SelectById>,
     ids_of_selection: Option<inquiry::IdsOfSelection>,
@@ -1091,6 +1096,7 @@ impl BimApp {
             options_dialog: None,
             purge_dialog: None,
             create_project: None,
+            scale_dialog: None,
             select_by_id: None,
             ids_of_selection: None,
             selection_filter: None,
@@ -1185,6 +1191,7 @@ impl BimApp {
             Tool::DetailLine(_) => Some(msg!("Place Detail Lines")),
             Tool::Spot => Some("Spot Elevation"),
             Tool::Measure(_) => Some("Measure"),
+            Tool::ScaleRef(_) => Some(msg!("Scale by Reference")),
             Tool::Tag => Some("Tag"),
             Tool::Section(_) => Some("Section"),
             Tool::Elevation => Some("Elevation"),
@@ -2264,6 +2271,7 @@ impl BimApp {
             Tool::Round(k, picked) if !picked.is_empty() => Tool::Round(k, Vec::new()),
             Tool::Section(Some(_)) => Tool::Section(None),
             Tool::Measure(Some(_)) => Tool::Measure(None),
+            Tool::ScaleRef(Some(_)) => Tool::ScaleRef(None),
             // The ruler laid goes first, then the tool.
             Tool::Measure(None) if self.measured.take().is_some() => Tool::Measure(None),
             Tool::Stair(pts) if !pts.is_empty() => Tool::Stair(Vec::new()),
@@ -2363,7 +2371,7 @@ impl BimApp {
             Tool::Grid(start) | Tool::Run(_, start) => *start = None,
             Tool::Dimension(_, refs) | Tool::Angular(refs) => refs.clear(),
             Tool::Round(_, picked) => picked.clear(),
-            Tool::Section(start) | Tool::Shaft(start) | Tool::Measure(start) => *start = None,
+            Tool::Section(start) | Tool::Shaft(start) | Tool::Measure(start) | Tool::ScaleRef(start) => *start = None,
             Tool::Stair(pts)
             | Tool::Ramp(pts)
             | Tool::Railing(pts)
@@ -4181,6 +4189,8 @@ impl BimApp {
             ),
             Tool::Measure(None) => msg!("Click the ruler's start: points snap as they do drawing."),
             Tool::Measure(Some(_)) => msg!("Click its end: its length and angle read beside it. Esc cancels."),
+            Tool::ScaleRef(None) => msg!("Click a point of the base whose distance to another you know, as one face of a wall."),
+            Tool::ScaleRef(Some(_)) => msg!("Click the other point: then type how far apart they are. Esc cancels."),
             Tool::Tag => msg!("Click an element to tag it with its type, a door's or window's with its mark, or with the field in Label."),
             Tool::Angular(refs) if refs.len() < 2 => msg!("Pick a wall, a grid or another line; then one that meets it."),
             Tool::Angular(_) => msg!("Click where the arc goes: the angle on that side. Esc cancels."),
@@ -4458,6 +4468,7 @@ impl BimApp {
 
     fn dialogs(&mut self, ctx: &Context) {
         self.create_project_window(ctx);
+        self.scale_window(ctx);
         self.type_properties(ctx);
         self.family_type_properties(ctx);
         self.materials_window(ctx);
