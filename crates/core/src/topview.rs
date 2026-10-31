@@ -30,9 +30,12 @@ const SEAM: f64 = 0.05;
 /// Degrees a softer fold (from half of [`FOLD`]) may turn from a line drawn and still be drawn as its going on.
 const ON: f64 = 40.0;
 
+/// The lines a mesh is drawn with, shared by every plan that draws it.
+pub type Lines = Arc<Vec<[P2; 2]>>;
+
 /// The lines of `tris` seen from above, as [`edges`] finds them: worked out once for each mesh, then kept.
-pub fn seen(tris: &[[P3; 3]]) -> Arc<Vec<[P2; 2]>> {
-    static MEMO: OnceLock<Mutex<HashMap<u64, Arc<Vec<[P2; 2]>>>>> = OnceLock::new();
+pub fn seen(tris: &[[P3; 3]]) -> Lines {
+    static MEMO: OnceLock<Mutex<HashMap<u64, Lines>>> = OnceLock::new();
     let memo = MEMO.get_or_init(Default::default);
     let key = fingerprint(tris);
     if let Some(found) = memo.lock().ok().and_then(|m| m.get(&key).cloned()) {
@@ -84,7 +87,7 @@ pub fn edges(tris: &[[P3; 3]]) -> Vec<[P2; 2]> {
         }
         let n = cross(sub(corners[f[1]], corners[f[0]]), sub(corners[f[2]], corners[f[0]]));
         let len = dot(n, n).sqrt();
-        if !(len > 1e-9) {
+        if len.is_nan() || len <= 1e-9 {
             continue;
         }
         faces.push(f);

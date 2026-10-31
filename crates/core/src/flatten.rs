@@ -95,6 +95,9 @@ fn round(p: P2) -> P2 {
     P2((p.0 * 100.0).round() / 100.0, (p.1 * 100.0).round() / 100.0)
 }
 
+/// An object of a DXF: its layer and its segments.
+type Drawn<'a> = (&'a str, Vec<(P2, P2)>);
+
 /// `strokes` as an ASCII DXF in millimetres: a grey layer for each kind of element, and each element a block placed once,
 /// its INSERT's handle the element's. Its lines are joined into polylines where two meet end to end, and a ring that is a
 /// circle is written as one.
@@ -102,7 +105,7 @@ pub fn dxf(strokes: &[Stroke]) -> String {
     let mut layers: Vec<&str> = strokes.iter().map(|s| s.layer.as_str()).collect();
     layers.sort_unstable();
     layers.dedup();
-    let mut objects: BTreeMap<&str, (&str, Vec<(P2, P2)>)> = BTreeMap::new();
+    let mut objects: BTreeMap<&str, Drawn> = BTreeMap::new();
     for s in strokes {
         objects.entry(s.object.as_str()).or_insert_with(|| (s.layer.as_str(), Vec::new())).1.push((s.a, s.b));
     }
@@ -193,7 +196,7 @@ fn circle(ring: &[P2]) -> Option<(P2, f64)> {
     let n = ring.len() as f64;
     let c = ring.iter().fold(P2(0.0, 0.0), |s, p| s + *p) * (1.0 / n);
     let r = ring.iter().map(|p| p.dist(c)).sum::<f64>() / n;
-    if !(r > 0.0) || ring.iter().any(|p| (p.dist(c) - r).abs() > 0.002 * r + 0.05) {
+    if r.is_nan() || r <= 0.0 || ring.iter().any(|p| (p.dist(c) - r).abs() > 0.002 * r + 0.05) {
         return None;
     }
     let mut turns: Vec<f64> = ring.iter().map(|p| (p.1 - c.1).atan2(p.0 - c.0)).collect();
