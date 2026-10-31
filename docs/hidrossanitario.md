@@ -26,15 +26,21 @@ o QiBuilder obriga a trabalho repetido, o programa faz sozinho.
 | 31/10/2026 | Só a aba Hidrossanitário na faixa de opções; Estrutura, Elétrica, SPDA e Dados ocultas (Configurações > Disciplinas) | Ele trabalha só com hidrossanitário. O código fica: é pequeno, é a mesma base dos tubos, e o leitor de IFC precisa dele para vigas, pilares etc. |
 | 31/10/2026 | Vídeos do QiBuilder + conector MCP AltoQi como forma de mostrar o fluxo | Ver o trabalho real em vez de adivinhar por manuais |
 | 31/10/2026 | **Prioridade: montar pranchas e detalhes sozinho** (distribuição, carimbo, indicação de peças), antes de parecer com o QiBuilder | Os sete vídeos mostram ~5 h para organizar 13 pranchas e esperas a cada passo; ele pediu economia de tempo |
+| 31/10/2026 | **Um projeto novo feito nos dois programas, passo a passo**: ele grava cada etapa no QiBuilder, a análise prepara o programa para repetir a mesma etapa | "Todos os passos que eu fizer aqui, nós obrigatoriamente temos que conseguir fazer no meu aplicativo" (série 2, vídeo 1) |
+| 31/10/2026 | **Os pavimentos são dele, não da arquitetura**: escolher o IFC no Criar projeto não muda mais os pavimentos | "Eu não quero depender da arquitetura… Não me interessa como o arquiteto considerou os pavimentos no projeto dele" (série 2, vídeo 1); a arquitetura do teste tinha nove níveis |
+| 31/10/2026 | **A arquitetura vinculada só aparece no 3D** até ele pedir o plano de corte; depois a planta mostra a planificação | "Só vai existir algum elemento a partir do momento que eu clicar e solicitar o plano de corte" (série 2, vídeo 1) |
 
 ## Fluxo do QiBuilder a reproduzir
 
-1. **Criar projeto**: nome, pasta, nº de pavimentos e altura de cada um.
-2. **Importar o IFC da arquitetura.**
+1. **Criar projeto**: nome, pasta, nº de pavimentos e altura de cada um, os dele (numa casa térrea: térreo e cobertura,
+   2,80 m, "depois eu altero"); as pranchas organizadas por disciplina (Hidráulico, Sanitário), numeradas por disciplina.
+2. **Vincular o IFC da arquitetura**: aparece só no 3D; as plantas do hidráulico e do sanitário ficam vazias.
 3. **Definir escala** por dois pontos (faces de parede de 15 cm).
 4. **Definir origem** comum a todas as disciplinas (compatibilização).
-5. **Planificar**: o IFC cortado em linhas 2D para traçar por cima. O essencial são os **pontos hidrossanitários** (louças,
-   cubas, torneiras, chuveiros, ralos).
+5. **Planificar** ("plano de corte"): uma janela diz, para cada pavimento, onde corta e até onde vê para baixo (no QiBuilder,
+   1,68 m e −0,42 m num pavimento de 2,80 m); o IFC vira linhas 2D por pavimento para traçar por cima. Depois ele põe tudo numa
+   cor só (cinza) e apaga a mobília que polui (sofá, tapete, piano, cortina). O essencial são os **pontos hidrossanitários**
+   (louças, cubas, torneiras, chuveiros, ralos), e os **snaps** na base têm de estar sempre à mão ao lançar os tubos.
 6. Lançamento (água fria, quente, esgoto, ventilação, pluvial). *Ainda a gravar em vídeo.*
 7. Detalhamento e **pranchas** (vídeos 1 a 7, abaixo).
 8. **Lista de materiais.**
@@ -49,6 +55,11 @@ o QiBuilder obriga a trabalho repetido, o programa faz sozinho.
 | Definir escala: DXF/DWG escalado por dois pontos; IFC só conferido | aba Hidrossanitário > Base | `scale_by_reference` |
 | Definir origem: o ponto clicado vira 0,0, tudo junto | aba Hidrossanitário > Base | `set_origin` |
 | Planificar: o IFC vinculado vira linhas 2D cinzas por pavimento, camada por categoria, sem hachuras | aba Hidrossanitário > Base | `flatten_link` |
+| Criar projeto com os pavimentos dele (térreo 2,80 m e cobertura, por padrão), não os da arquitetura; mostra o nível de cada pavimento; o IFC escolhido fica só no 3D | página inicial | `new`, `link` (`in_plans: false`) |
+| Plano de corte: janela com cada pavimento, corte e limite inferior (padrão 60 % e −15 % da altura, como o QiBuilder), desenho explicativo; o modelo continua no 3D | aba Hidrossanitário > Base > Planificar | `flatten_link` (`levels: [{level, cut, bottom}]`, `keep_link`) |
+| Planificação com a qualidade do QiBuilder: louças e móveis desenhados como vistos de cima (bordas, cubas, assentos), não pelo contorno convexo | planificação e plantas | — |
+| Base numa cor só (cinza), cada elemento um objeto, camadas pelo que é (parede, porta, mobiliário, louças…), ralos como círculos (snap no centro) | planificação | — |
+| Apagar da base: um clique tira um objeto inteiro (sofá, tapete, piano); fica apagado se planificar de novo; Ctrl+Z desfaz | aba Hidrossanitário > Base | `cad_erase` |
 | Louças do Revit lidas do IFC (IfcFlowTerminal do IFC2x3 e IfcDistributionElement, como o Revit exporta famílias Deca) | importação de IFC | — |
 | Níveis da arquitetura a poucos cm um do outro aceitos | Criar projeto | — |
 | Instalador Windows a cada envio à branch | GitHub Actions > "Windows (hidrossanitário)" > Artifacts | — |
@@ -221,6 +232,28 @@ tem áudio (um dos vídeos saiu sem); narrar o que faz e por quê. Faltam: o **l
 ventilação, pluvial), **criar uma região de detalhe** do zero e a **lista de materiais** como ele entrega. Os vídeos ficam
 numa pasta do Drive dele, que a sessão lê pelo computador ligado; o processo de análise está em
 [tools/videos/README.md](../tools/videos/README.md).
+
+## Série 2: um projeto do zero, nos dois programas
+
+A partir de 31/10/2026 ele grava um projeto novo (uma residência térrea) do começo ao fim no QiBuilder, uma etapa por vídeo, e
+o programa é preparado para repetir a mesma etapa. Os relatórios de cada vídeo ficam na pasta de vídeos do Drive dele.
+
+| # | Duração | Etapa | O que pede ao programa | Feito |
+|---|---|---|---|---|
+| 1 | 5:00 | Criar o projeto, vincular o IFC, plano de corte | Pavimentos dele (térreo e cobertura, 2,80 m), não os da arquitetura; IFC só no 3D até o plano de corte; uma janela que diga onde corta e o que se vê em cima e embaixo, por pavimento | Criar projeto; vínculo só no 3D; Plano de corte |
+| 2 | 3:01 | A planificação como base do projeto | Planificação com a mesma qualidade do QiBuilder; tudo numa cor só; tirar a mobília que não interessa; snaps sempre disponíveis ao lançar | Desenho visto de cima; cinza; Apagar da base; objetos e círculos (snap) |
+
+**O QiBuilder nestes vídeos**: Arquivo > Novo > Nova edificação (6 passos: identificação e pasta; modelo; disciplinas;
+propriedades de cálculo; pavimentos com nome, repetições, altura e nível; forma de organização das pranchas: pastas por projeto,
+numeração por projeto). Árvore da edificação: cada pavimento com o desenho do Hidráulico e do Sanitário; Modelos 3D (o IFC);
+Imagens 3D; Esquemas. Botão direito no IFC > Plano de corte: tabela por pavimento (seleção, altura, corte superior e inferior,
+nível, nível superior e inferior) com um esquema do corte e o padrão de abrangência dos objetos; a planificação vira um desenho
+por pavimento, camadas "IFC-Parede", "IFC-Mobiliário" etc. A cor única ele põe camada por camada em Configurações > Desenho >
+Níveis de desenho (cor 251, cinza).
+
+**Ainda não**: as plantas por disciplina (Hidráulico e Sanitário em cada pavimento) como na árvore do QiBuilder; a escolha do
+que entra na planificação por categoria (o "padrão de abrangência"); esconder linhas de um objeto sob outro objeto (hoje só
+dentro do mesmo objeto); o que o próximo vídeo mostrar (lançamento).
 
 ## Referências do usuário
 

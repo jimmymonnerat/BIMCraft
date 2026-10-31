@@ -112,9 +112,32 @@ elements follow. Levels, sheets, views, schedules and the viewports on sheets st
 moved yet. The origin where it is already moves nothing.
 
 Flatten Link (`flatten.rs`, the `flatten_link` command; tests in `crates/core/src/reference_tests.rs`). The architect's linked model is cut
-at each storey as its plan cuts it (`render::draw` of `link::seen` with only that link, at a pixel a millimetre so `f32` keeps the ends
-exact) and the strokes of its linked elements kept: what is cut and what is seen (`Part::Cut`, `Part::Projection`), never hatching,
-lettering, fills or pictures, a closed line's last edge too, to a hundredth of a millimetre. They become a DXF in millimetres
-(`flatten::dxf`: a grey layer for each category, a LINE each), held as a drawing named `<link> - <level>` and placed on that level by
-`import_cad` with `cad`, `position: origin`, so it lies where the link did. Flattening a storey again replaces its drawing and placing; a
-storey with nothing to draw is passed over. The link goes unless `keep_link` (its file stays, to link again); undo brings it back.
+at each storey (`render::draw` of `link::seen` with only that link, at a pixel a millimetre so `f32` keeps the ends exact) and the strokes of
+its linked elements kept: what is cut and what is seen (`Part::Cut`, `Part::Projection`), never hatching, lettering, fills or pictures, a
+closed line's last edge too, to a hundredth of a millimetre. Each storey's plan is cut where it is asked (`cut`, `bottom`: mm over its
+level, for every storey or each in `levels`), else at `flatten::CUT` of the storey's height and seen down to `flatten::BOTTOM` of it under
+its floor (60 % and 15 %: 1680 and -420 for a storey 2800 high, as the designer's old program cuts one); the copy the cut is drawn from has
+that view range, its template and section box let go, and the project's own views keep theirs. They become a DXF in millimetres
+(`flatten::dxf`): a grey layer (ACI 251) for what each element is (`wall`, `door`…; a component's, its family's category: `furniture`,
+`plumbing`…), each element a block placed once whose INSERT's handle is its GUID folded to 64 bits, its strokes joined into polylines where
+two meet end to end, and a ring of a dozen sides or more on one circle written as a CIRCLE (a drain: its centre is snapped to). The drawing
+is named `<link> - <level>` and placed on that level by `import_cad` with `cad`, `position: origin`, so it lies where the link did.
+Flattening a storey again replaces its drawing and placing, keeping what was erased of it and its hidden layers; a storey with nothing to
+draw is passed over. The link goes unless `keep_link`, which keeps it for the 3D view and sections and turns it out of the plans (its
+`in_plans`); undo brings it back.
+
+A link kept out of plans (`Link::in_plans`, `link` with `in_plans: false`; tests in `crates/core/src/link.rs`) is drawn by the 3D view
+and sections alone: `link::seen` lists what it brings in `Model::out_of_plans`, and `Look::of` a level or a plan view hides those, so a
+plan draws, fits to and snaps to nothing of it. `link::seen_in_plans` is the model without it. Create Project links the architect's
+model so, and its plans stay empty until they are flattened.
+
+Erase from Drawing (`cad_erase`; tests in `crates/core/src/cad_tests.rs`). A DXF's entities each belong to an object
+(`dxf::Entity::object`): the handle of the top-level entity they come from (an INSERT's, with all its block draws, or their own), or
+`#n` where it stands in ENTITIES when the file gives none. `cad_erase` takes the object nearest a point (`cad::nearest`, as Query) out of
+the import, which keeps it in `CadImport::erased` (`Cad::shows` leaves it out of drawing, snapping and Query); the file is left as it is,
+and `restore` brings all back.
+
+A component whose family's form a file brought as triangles (an IFC's furniture and fixtures, `family::Piece::mesh`) draws in plan as it
+is seen from above (`topview.rs`): the edges where its surface ends, folds by 30° or more, or turns away from the eye, but where a face of
+the mesh over them hides them; a smooth surface's facets draw no lines between them. The lines of each mesh are worked out once and kept.
+Before, the convex hull round each form stood for it, and a basin, a WC or an L-shaped counter flattened to a blob.
