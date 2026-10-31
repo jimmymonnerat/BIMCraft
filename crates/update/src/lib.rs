@@ -35,10 +35,10 @@ pub use detect::Install;
 pub use updater::{Handover, Note, State, Updater};
 
 /// The repository releases are read from and downloaded of.
-const REPO: &str = "IPedrax/BIMCraft";
+const REPO: &str = "jimmymonnerat/BIMCraft";
 
 /// GitHub's latest published release: not a draft, not a pre-release.
-pub const LATEST_URL: &str = "https://api.github.com/repos/IPedrax/BIMCraft/releases/latest";
+pub const LATEST_URL: &str = "https://api.github.com/repos/jimmymonnerat/BIMCraft/releases/latest";
 
 /// The most of a reply to [`LATEST_URL`] that is read: GitHub's is about 7 KB, release notes and all.
 pub const MAX_JSON: u64 = 1 << 20;

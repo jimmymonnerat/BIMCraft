@@ -36,7 +36,7 @@ fn agent(https_only: bool) -> Agent {
         .max_redirects(0)
         .timeout_connect(Some(Duration::from_secs(10)))
         .timeout_recv_response(Some(Duration::from_secs(15)))
-        .user_agent(format!("BIMCraft/{} (+https://github.com/IPedrax/BIMCraft)", env!("CARGO_PKG_VERSION")))
+        .user_agent(format!("BIMCraft/{} (+https://github.com/jimmymonnerat/BIMCraft)", env!("CARGO_PKG_VERSION")))
         .build()
         .into()
 }

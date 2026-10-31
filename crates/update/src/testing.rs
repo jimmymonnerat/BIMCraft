@@ -96,7 +96,7 @@ pub fn release_json(tag: &str, installer: Option<&[u8]>) -> String {
                 "size": bytes.len(),
                 "digest": digest_field(bytes),
                 "state": "uploaded",
-                "browser_download_url": format!("https://github.com/IPedrax/BIMCraft/releases/download/{tag}/{}", Target::Windows.asset_name(version)),
+                "browser_download_url": format!("https://github.com/jimmymonnerat/BIMCraft/releases/download/{tag}/{}", Target::Windows.asset_name(version)),
             })
         })
         .into_iter()

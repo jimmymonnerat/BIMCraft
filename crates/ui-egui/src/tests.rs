@@ -5413,8 +5413,10 @@ mod updates {
     fn rig(tag: &str, installing: bool) -> Rig {
         let mut h = app(BOX);
         let dir = Scratch::new("ui-updates");
-        let installer_url =
-            format!("https://github.com/IPedrax/BIMCraft/releases/download/{tag}/bimcraft-{}-windows-x64.msi", tag.trim_start_matches('v'));
+        let installer_url = format!(
+            "https://github.com/jimmymonnerat/BIMCraft/releases/download/{tag}/bimcraft-{}-windows-x64.msi",
+            tag.trim_start_matches('v')
+        );
         let net = Arc::new(Fake::default().answer(LATEST_URL, release_json(tag, Some(INSTALLER))).answer(&installer_url, INSTALLER));
         let handed: Handed = Arc::default();
         let (log, failing) = (Arc::clone(&handed), Arc::new(AtomicBool::new(false)));
@@ -5635,7 +5637,7 @@ mod updates {
             let commands = &h.output().platform_output.commands;
             commands.iter().filter_map(|c| if let egui::OutputCommand::OpenUrl(u) = c { Some(u.url.clone()) } else { None }).collect()
         };
-        let page = "https://github.com/IPedrax/BIMCraft/releases/tag/v0.5.0";
+        let page = "https://github.com/jimmymonnerat/BIMCraft/releases/tag/v0.5.0";
         for button in ["Download", "What's new"] {
             r.h.get_by_label(button).click();
             r.h.step();
@@ -5705,7 +5707,7 @@ mod updates {
     #[test]
     fn a_download_that_fails_its_check_says_why_and_the_offer_stays() {
         let mut r = rig("v0.5.0", true);
-        let url = "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
+        let url = "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
         let net = Arc::new(Fake::default().answer(LATEST_URL, release_json("v0.5.0", Some(INSTALLER))).answer(url, "another file"));
         let updater =
             Updater::new(net, Version::new(0, 4, 0), None, || {}).inline().target(Some(Target::Windows)).in_folder(r.dir.0.clone());

@@ -1,0 +1,67 @@
+# The Windows installer of the hidrossanitário branch, for trying it on a PC: on every push to the branch (or run by hand) it
+# builds BIMCraft and its command line for Windows, packages the .msi and the portable .zip, and keeps them as the run's
+# artifact (Actions > the run > Artifacts). The tests run on the development machine before each push, so this only builds.
+name: Windows (hidrossanitário)
+
+on:
+  push:
+    branches: [hidrossanitario]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-hidrossanitario
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust
+        run: rustup update stable && rustup default stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: windows-release-${{ hashFiles('Cargo.lock') }}
+          restore-keys: windows-release-
+
+      # The C runtime linked in, so the exes run on a Windows without the Visual C++ redistributable.
+      - name: Build
+        env:
+          CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked --target x86_64-pc-windows-msvc -p bimcraft -p bimcraft-cli
+
+      - name: Installer
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          dotnet tool install --global wix --version 5.0.2
+          $wix = "$env:USERPROFILE\.dotnet\tools\wix.exe"
+          & $wix extension add -g WixToolset.UI.wixext/5.0.2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $msi = "bimcraft-$version-windows-x64.msi"
+          & $wix build packaging/windows/bimcraft.wxs -arch x64 -ext WixToolset.UI.wixext -d Version=$version -d BinDir=target\x86_64-pc-windows-msvc\release -o $msi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Add-Content -Path $env:GITHUB_ENV -Value "MSI=$msi"
+
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          packaging/windows/portable.ps1 -Version $version -BinDir target\x86_64-pc-windows-msvc\release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bimcraft-hidrossanitario-windows-x64
+          path: |
+            ${{ env.MSI }}
+            ${{ env.PORTABLE }}

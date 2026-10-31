@@ -24,7 +24,7 @@ use crate::style::{self, pal};
 use crate::{BimApp, Pending};
 
 /// Where the source code is.
-pub const SOURCE: &str = "https://github.com/IPedrax/BIMCraft";
+pub const SOURCE: &str = "https://github.com/jimmymonnerat/BIMCraft";
 /// A tile's picture, px (drawn at twice that, for sharp screens).
 const THUMB: [u32; 2] = [232, 136];
 /// A project file bigger than this gets no picture: drawing one would hold the thread too long.

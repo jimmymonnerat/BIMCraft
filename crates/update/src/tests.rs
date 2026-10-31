@@ -48,7 +48,7 @@ fn asset(name: &str, size: Value, digest: &str) -> Value {
 fn installer(bytes: &[u8]) -> Installer {
     Installer {
         name: NAME.into(),
-        url: format!("https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/{NAME}"),
+        url: format!("https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/{NAME}"),
         size: bytes.len() as u64,
         sha256: sha(bytes),
         checksums: None,
@@ -101,10 +101,10 @@ fn newer_is_semver_order_not_text_order() {
 fn the_real_v0_4_0_reply_parses() {
     let r = parse(V040.as_bytes()).unwrap();
     assert_eq!(r.version, v("0.4.0"));
-    assert_eq!(r.page, "https://github.com/IPedrax/BIMCraft/releases/tag/v0.4.0");
+    assert_eq!(r.page, "https://github.com/jimmymonnerat/BIMCraft/releases/tag/v0.4.0");
     let i = r.installer.unwrap();
     assert_eq!(i.name, "bimcraft-0.4.0-windows-x64.msi");
-    assert_eq!(i.url, "https://github.com/IPedrax/BIMCraft/releases/download/v0.4.0/bimcraft-0.4.0-windows-x64.msi");
+    assert_eq!(i.url, "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.4.0/bimcraft-0.4.0-windows-x64.msi");
     assert_eq!(i.size, 8_966_144);
     assert_eq!(hex(&i.sha256), "52ec6b0f58ed78fef0353e5f2e75ab230bf6e0e66ddc3d4cc3add4baffeacb68");
 }
@@ -198,8 +198,8 @@ fn the_download_address_is_built_here_not_read_from_the_reply() {
     j["html_url"] = json!("javascript:alert(1)");
     j["assets"][0]["url"] = json!("https://evil.example/api");
     let r = parse(j.to_string().as_bytes()).unwrap();
-    assert_eq!(r.page, "https://github.com/IPedrax/BIMCraft/releases/tag/v0.5.0");
-    assert_eq!(r.installer.unwrap().url, format!("https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/{NAME}"));
+    assert_eq!(r.page, "https://github.com/jimmymonnerat/BIMCraft/releases/tag/v0.5.0");
+    assert_eq!(r.installer.unwrap().url, format!("https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/{NAME}"));
 }
 
 #[test]
@@ -394,12 +394,12 @@ fn preferences_sit_beside_the_favorites_under_a_name_of_their_own() {
 #[test]
 fn a_redirect_may_only_go_where_github_serves_releases() {
     let ok = [
-        "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/x.msi",
-        "https://api.github.com/repos/IPedrax/BIMCraft/releases/latest",
+        "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/x.msi",
+        "https://api.github.com/repos/jimmymonnerat/BIMCraft/releases/latest",
         "https://release-assets.githubusercontent.com/github-production-release-asset/1/2?sp=r&sv=2018",
         "https://objects.githubusercontent.com/github-production-release-asset-2e65be/1/2",
         "https://RELEASE-ASSETS.githubusercontent.com/x",
-        "https://GitHub.com/ipedrax/bimcraft/releases/download/v0.5.0/x.msi",
+        "https://GitHub.com/JimmyMonnerat/bimcraft/releases/download/v0.5.0/x.msi",
     ];
     for url in ok {
         assert!(net::hop_allowed(url), "{url}");
@@ -428,19 +428,19 @@ fn a_redirect_may_only_go_where_github_serves_releases() {
         "https://user:pass@github.com/x",
         "/relative/path",
         // The right addresses, in the clear.
-        "http://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/x.msi",
-        "http://api.github.com/repos/IPedrax/BIMCraft/releases/latest",
+        "http://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/x.msi",
+        "http://api.github.com/repos/jimmymonnerat/BIMCraft/releases/latest",
         "http://release-assets.githubusercontent.com/github-production-release-asset/1/2",
         // GitHub's own hosts, but not this repository's releases.
         "https://github.com/",
         "https://github.com/evil/repo/releases/download/v1/x.msi",
-        "https://github.com/IPedrax/BIMCraft/archive/refs/heads/main.zip",
-        "https://github.com/IPedrax/BIMCraft2/releases/download/v1/x.msi",
-        "https://github.com/IPedrax/BIMCraft/releases/download/../../../evil/x",
-        "https://github.com/IPedrax/BIMCraft/releases/download/v%2e%2e/x",
+        "https://github.com/jimmymonnerat/BIMCraft/archive/refs/heads/main.zip",
+        "https://github.com/jimmymonnerat/BIMCraft2/releases/download/v1/x.msi",
+        "https://github.com/jimmymonnerat/BIMCraft/releases/download/../../../evil/x",
+        "https://github.com/jimmymonnerat/BIMCraft/releases/download/v%2e%2e/x",
         "https://api.github.com/user",
         "https://api.github.com/repos/evil/repo/releases/latest",
-        "https://api.github.com/repos/IPedrax/BIMCraft/releases/../../../../user",
+        "https://api.github.com/repos/jimmymonnerat/BIMCraft/releases/../../../../user",
     ];
     for url in bad {
         assert!(!net::hop_allowed(url), "{url:?}");
@@ -873,8 +873,10 @@ fn updater(net: &Arc<Fake>, dir: &Scratch) -> Updater {
 }
 
 fn latest(tag: &str, installer: Option<&[u8]>) -> Arc<Fake> {
-    let installer_url =
-        format!("https://github.com/IPedrax/BIMCraft/releases/download/{tag}/{}", Target::Windows.asset_name(tag.trim_start_matches('v')));
+    let installer_url = format!(
+        "https://github.com/jimmymonnerat/BIMCraft/releases/download/{tag}/{}",
+        Target::Windows.asset_name(tag.trim_start_matches('v'))
+    );
     Arc::new(Fake::default().answer(LATEST_URL, release_json(tag, installer)).answer(&installer_url, installer.unwrap_or_default()))
 }
 
@@ -1137,7 +1139,7 @@ fn while_it_installs_nothing_else_changes_the_update_or_takes_its_folder() {
 #[test]
 fn a_download_that_fails_its_check_goes_back_to_the_offer_and_says_why() {
     let dir = Scratch::new("u8");
-    let url = "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
+    let url = "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
     let net =
         Arc::new(Fake::default().answer(LATEST_URL, release_json("v0.5.0", Some(INSTALLER))).answer(url, "pretend this is another one"));
     let mut u = updater(&net, &dir);
@@ -1236,7 +1238,7 @@ fn release_of(tag: &str, files: &[(String, Vec<u8>)], sums: Option<&str>) -> Vec
     reply(tag, json!(assets))
 }
 
-const SUMS_URL: &str = "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/SHA256SUMS";
+const SUMS_URL: &str = "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/SHA256SUMS";
 
 #[test]
 fn each_kind_of_install_has_its_own_file_in_a_release() {
@@ -1264,7 +1266,7 @@ fn a_release_with_a_file_for_every_platform_gives_each_install_its_own() {
         let i = parse_release(&json, Some(&target)).unwrap().installer.unwrap();
         let bytes = &all.iter().find(|(n, _)| n == name).unwrap().1;
         assert_eq!((i.name.as_str(), i.size, i.sha256), (name, bytes.len() as u64, sha(bytes)), "{target:?}");
-        assert_eq!(i.url, format!("https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/{name}"), "{target:?}");
+        assert_eq!(i.url, format!("https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/{name}"), "{target:?}");
         assert_eq!(i.checksums.as_deref(), Some(SUMS_URL), "{target:?}");
     }
     let bare = parse_release(&json, None).unwrap();
@@ -1439,7 +1441,7 @@ fn a_checksum_file_that_disagrees_stops_an_update_and_says_so() {
     other[0].1 = b"another file".to_vec();
     let sums = sums_of(&other);
     let all = files("0.5.0");
-    let installer_url = "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
+    let installer_url = "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
     let net = Arc::new(
         Fake::default()
             .answer(LATEST_URL, release_of("v0.5.0", &all, Some(&sums)))
@@ -1460,7 +1462,7 @@ fn a_checksum_file_that_disagrees_stops_an_update_and_says_so() {
 fn an_update_checks_the_checksum_file_before_the_installer_and_is_ready_when_they_agree() {
     let all = files("0.5.0");
     let sums = sums_of(&all);
-    let installer_url = "https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
+    let installer_url = "https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/bimcraft-0.5.0-windows-x64.msi";
     let net = Arc::new(
         Fake::default()
             .answer(LATEST_URL, release_of("v0.5.0", &all, Some(&sums)))
@@ -1487,7 +1489,7 @@ fn an_update_that_has_no_target_has_no_file_and_a_disk_image_downloads_like_any_
     bare.poll();
     assert!(matches!(bare.state(), State::Available(r) if r.installer.is_none()), "told of, with no file");
     let dmg = &all[all.len() - 2];
-    let dmg_url = format!("https://github.com/IPedrax/BIMCraft/releases/download/v0.5.0/{}", dmg.0);
+    let dmg_url = format!("https://github.com/jimmymonnerat/BIMCraft/releases/download/v0.5.0/{}", dmg.0);
     let net = Arc::new(Fake::default().answer(LATEST_URL, release_of("v0.5.0", &all, None)).answer(&dmg_url, dmg.1.clone()));
     let mut mac = updater(&net, &dir).target(Some(Target::MacApp));
     mac.check_at_startup();
