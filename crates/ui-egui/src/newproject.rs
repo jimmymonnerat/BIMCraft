@@ -44,10 +44,10 @@ pub struct Creating {
     pub(crate) link: Option<String>,
 }
 
-/// A height typed in metres, as mm: "3", "2,88", "3.06".
+/// A height typed in metres, as mm: "3", "2,88", "3.06", "0,05" (an architect's levels may be 5 cm apart).
 pub(crate) fn metres(text: &str) -> Option<f64> {
     let m: f64 = text.trim().replace(',', ".").parse().ok()?;
-    (m.is_finite() && (0.1..=100.0).contains(&m)).then(|| (m * 1000.0).round())
+    (m.is_finite() && (0.001..=100.0).contains(&m)).then(|| (m * 1000.0).round())
 }
 
 impl CreateProject {
@@ -93,7 +93,7 @@ impl CreateProject {
         let Some(folder) = &self.folder else { return Err(t("Choose the folder to save it in.").to_string()) };
         let mut heights = Vec::new();
         for s in &self.storeys {
-            let h = metres(&s.height).ok_or_else(|| tf("{}: the height is in metres, from 0.1 to 100", &[&s.name]))?;
+            let h = metres(&s.height).ok_or_else(|| tf("{}: the height is in metres, from 0.001 to 100", &[&s.name]))?;
             heights.push(h);
         }
         let mut names: Vec<String> = self.storeys.iter().map(|s| s.name.trim().to_string()).collect();

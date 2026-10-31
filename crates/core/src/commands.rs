@@ -56,7 +56,7 @@ pub static ALL: &[Command] = &[
         "New",
         "{name?, language?: en|pt|es|sv, heights?: [mm, …], names?: [text, …]} an empty project with Level 1 (0) and Level 2 (3000), \
          named in its language (Nível 1, Nível 2 in Portuguese; Nivel 1, Nivel 2 in Spanish; Nivå 1, Nivå 2 in Swedish); with \
-         `heights`, each storey's height from the ground up (1 to 200 storeys, 100 to 100000 mm), a level at the foot of each \
+         `heights`, each storey's height from the ground up (1 to 200 storeys, 1 to 100000 mm: an architect's levels may be 5 cm apart), a level at the foot of each \
          storey and one more over the last, named Level 1, Level 2… or by `names` (one for each level, none the same). \
          Returns `levels`, how many it has",
         new,
@@ -2298,8 +2298,8 @@ fn new(s: &mut Session, p: &Value) -> R {
             a.iter()
                 .map(|h| {
                     h.as_f64()
-                        .filter(|h| h.is_finite() && *h >= 100.0 && *h <= 100_000.0)
-                        .ok_or_else(|| bad(c, format!("`heights`: a storey is 100 to 100000 mm high, not {h}")))
+                        .filter(|h| h.is_finite() && *h >= 1.0 && *h <= 100_000.0)
+                        .ok_or_else(|| bad(c, format!("`heights`: a storey is 1 to 100000 mm high, not {h}")))
                 })
                 .collect::<Result<_, _>>()?,
         ),
