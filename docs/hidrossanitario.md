@@ -29,6 +29,7 @@ o QiBuilder obriga a trabalho repetido, o programa faz sozinho.
 | 31/10/2026 | **Um projeto novo feito nos dois programas, passo a passo**: ele grava cada etapa no QiBuilder, a análise prepara o programa para repetir a mesma etapa | "Todos os passos que eu fizer aqui, nós obrigatoriamente temos que conseguir fazer no meu aplicativo" (série 2, vídeo 1) |
 | 31/10/2026 | **Os pavimentos são dele, não da arquitetura**: escolher o IFC no Criar projeto não muda mais os pavimentos | "Eu não quero depender da arquitetura… Não me interessa como o arquiteto considerou os pavimentos no projeto dele" (série 2, vídeo 1); a arquitetura do teste tinha nove níveis |
 | 31/10/2026 | **A arquitetura vinculada só aparece no 3D** até ele pedir o plano de corte; depois a planta mostra a planificação | "Só vai existir algum elemento a partir do momento que eu clicar e solicitar o plano de corte" (série 2, vídeo 1) |
+| 31/10/2026 | **Uma planta do Hidráulico e outra do Sanitário em cada pavimento**, como no QiBuilder. A base traz tudo (ele apaga à mão o que não quer) e é sempre cinza 251; o Criar projeto não cria subpastas | Respostas dele às perguntas da série 2 |
 
 ## Fluxo do QiBuilder a reproduzir
 
@@ -68,14 +69,16 @@ o QiBuilder obriga a trabalho repetido, o programa faz sozinho.
 ## Na fila
 
 1. **Montar pranchas** (prioridade): a proposta e os requisitos R1 a R8 estão abaixo.
-2. **Lançamento** como no QiBuilder (depende dos vídeos dessa etapa).
-3. **Cadastro de peças** (R9) a partir do banco .AQ do QiBuilder ou lido pelo conector MCP AltoQi
+2. **Plantas por disciplina**, antes do lançamento: em cada pavimento, a do Hidráulico (água fria e quente) e a do
+   Sanitário (esgoto, ventilação e pluvial), cada uma com a sua rede sobre a mesma base.
+3. **Lançamento** como no QiBuilder (depende dos vídeos dessa etapa).
+4. **Cadastro de peças** (R9) a partir do banco .AQ do QiBuilder ou lido pelo conector MCP AltoQi
    (`builder-get_available_part`). O cadastro fica fora do repositório público.
-4. **Padrões de desenho do escritório** (R10).
-5. **Interface parecida com o QiBuilder**: abas e painéis, nomes, atalhos. O manual instalado
+5. **Padrões de desenho do escritório** (R10).
+6. **Interface parecida com o QiBuilder**: abas e painéis, nomes, atalhos. O manual instalado
    (`C:\Program Files\AltoQi\Builder\Ajuda\QiBuilder`) pode ser enviado como .zip ou a pasta conectada à conversa.
-6. Conexões que ainda faltam: redução, curvas que não sejam de 90°, mudança de direção em prumada, cruzeta.
-7. Nome próprio do programa (hoje aparece "BIMCraft").
+7. Conexões que ainda faltam: redução, curvas que não sejam de 90°, mudança de direção em prumada, cruzeta.
+8. Nome próprio do programa (hoje aparece "BIMCraft").
 
 ## Análise dos vídeos
 
@@ -252,8 +255,8 @@ nível, nível superior e inferior) com um esquema do corte e o padrão de abran
 por pavimento, camadas "IFC-Parede", "IFC-Mobiliário" etc. A cor única ele põe camada por camada em Configurações > Desenho >
 Níveis de desenho (cor 251, cinza).
 
-**Ainda não**: as plantas por disciplina (Hidráulico e Sanitário em cada pavimento) como na árvore do QiBuilder; a escolha do
-que entra na planificação por categoria (o "padrão de abrangência"); esconder linhas de um objeto sob outro objeto (hoje só
+**Ainda não**: as plantas por disciplina (Hidráulico e Sanitário em cada pavimento) como na árvore do QiBuilder, primeiro
+da fila; esconder linhas de um objeto sob outro objeto (hoje só
 dentro do mesmo objeto); o que o próximo vídeo mostrar (lançamento).
 
 ## Referências do usuário
